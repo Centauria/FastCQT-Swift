@@ -4,13 +4,13 @@
 import CoreML
 import Foundation
 
-func cqtFrequencies(
-    nBins: Int, fMin: Float32, binsPerOctave: Int = 12, tuning: Float32 = 0.0
+public func cqtFrequencies(
+    nBins: Int, fMin: Float, binsPerOctave: Int = 12, tuning: Float = 0.0
 )
-    -> [Float32]
+    -> [Float]
 {
-    let correction = powf(2.0, tuning / Float32(binsPerOctave))
+    let correction = powf(2.0, tuning / Float(binsPerOctave))
     return (0..<nBins).map { i in
-        correction * fMin * powf(2.0, Float32(i) / Float32(binsPerOctave))
+        correction * fMin * powf(2.0, Float(i) / Float(binsPerOctave))
     }
 }
