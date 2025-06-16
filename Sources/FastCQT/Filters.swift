@@ -56,3 +56,29 @@ public func relativeBandwidth(freqs: [Float]) -> [Float] {
     let alpha = vDSP.divide(vDSP.add(-1.0, u), vDSP.add(1.0, u))
     return alpha
 }
+
+public func waveletLengths(
+    freqs: [Float], sr: Float, window: Windows.WindowType,
+    filterScale: Float = 1, gamma: Float? = 0, alpha: [Float]?
+) -> ([Float], Float) {
+    guard filterScale > 0 else { return ([], .nan) }
+    let alpha_ = alpha ?? relativeBandwidth(freqs: freqs)
+    let bw = Windows.Bandwidth[window]! / 2
+    let a = vDSP.add(multiplication: (a: alpha_, b: bw / filterScale), 1)
+    let fCutoff: Float
+    let lengths: [Float]
+    if let gamma_ = gamma {
+        fCutoff = vDSP.maximum(vDSP.add(multiplication: (a: a, b: freqs), gamma_ / 2))
+        lengths = vDSP.divide(
+            filterScale * sr,
+            vDSP.add(multiplication: (a: alpha_, b: freqs), gamma_))
+    } else {
+        let gamma_ = vDSP.multiply(24.7 / 0.108, alpha_)
+        fCutoff = vDSP.maximum(
+            vDSP.add(multiplication: (a: a, b: freqs), vDSP.divide(gamma_, 2)))
+        lengths = vDSP.divide(
+            filterScale * sr,
+            vDSP.add(multiplication: (a: alpha_, b: freqs), gamma_))
+    }
+    return (lengths, fCutoff)
+}

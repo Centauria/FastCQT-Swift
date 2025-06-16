@@ -1,5 +1,5 @@
-import Foundation
 import Accelerate
+import Foundation
 import Numerics
 import Plinth
 
