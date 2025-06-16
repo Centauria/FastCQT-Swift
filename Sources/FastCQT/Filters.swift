@@ -1,5 +1,7 @@
 import Accelerate
 import Foundation
+import Numerics
+import Plinth
 
 public func windowBandwidth(window: [Float]) -> Float {
     let n = window.count
@@ -81,4 +83,45 @@ public func waveletLengths(
             vDSP.add(multiplication: (a: alpha_, b: freqs), gamma_))
     }
     return (lengths, fCutoff)
+}
+
+public func wavelet(
+    freqs: [Float],
+    sr: Float = 22050,
+    window: Windows.WindowType = .hann,
+    filterScale: Float = 1,
+    padFFT: Bool = true,
+    norm: Float = 1,
+    gamma: Float = 0,
+    alpha: [Float]?
+) -> (ComplexMatrix<Float>, [Float]) {
+    let (lengths, _) = waveletLengths(freqs: freqs, sr: sr, window: window, alpha: alpha)
+    let n = freqs.count
+
+    let maxlenFloat = vDSP.maximum(lengths)
+    let maxlen: size_t
+    if padFFT {
+        maxlen = 1 << Int(ceilf(log2f(maxlenFloat)))
+    } else {
+        maxlen = size_t(ceilf(maxlenFloat))
+    }
+
+    var filters: ComplexMatrix<Float> = .zeros(shape: .init(rows: maxlen, columns: n))
+
+    for i in 0..<n {
+        let ilen = lengths[i]
+        let freq = freqs[i]
+        var angles = vDSP.ramp(
+            withInitialValue: floorf(-ilen / 2), increment: 1,
+            count: Int(floorf(ilen / 2) - floorf(-ilen / 2)))
+        vDSP.multiply(2 * .pi * freq / sr, angles, result: &angles)
+        var sig = phasor(angles: angles)
+        let siglen = sig.count
+        let win: Matrix<Float> = .init(column: Windows.get(type: window, M: siglen))
+        sig *= win
+        sig = normalize(S: sig, norm: norm)
+        let start = (maxlen - siglen) / 2
+        filters[start..<start + siglen, i] = sig
+    }
+    return (filters, lengths)
 }
