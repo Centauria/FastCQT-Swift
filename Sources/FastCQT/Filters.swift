@@ -5,7 +5,7 @@ public func windowBandwidth(window: [Float]) -> Float {
     let n = window.count
     let sw = vDSP.sum(window)
     let sw2 = vDSP.sumOfSquares(window)
-    let y = Float(n) * sw2 / (sw * sw + FLT_EPSILON)
+    let y = Float(n) * sw2 / (sw * sw + .ulpOfOne)
     return y
 }
 
