@@ -106,7 +106,7 @@ public func wavelet(
         maxlen = size_t(ceilf(maxlenFloat))
     }
 
-    var filters: ComplexMatrix<Float> = .zeros(shape: .init(rows: maxlen, columns: n))
+    var filters: ComplexMatrix<Float> = .zeros(shape: .init(rows: n, columns: maxlen))
 
     for i in 0..<n {
         let ilen = lengths[i]
@@ -121,7 +121,7 @@ public func wavelet(
         sig *= win
         sig = normalize(S: sig, norm: norm)
         let start = (maxlen - siglen) / 2
-        filters[start..<start + siglen, i] = sig
+        filters[i, start..<start + siglen] = sig
     }
     return (filters, lengths)
 }

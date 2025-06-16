@@ -20,8 +20,8 @@ public func phasor(angles: [Float]) -> ComplexMatrix<Float> {
     var v = [Float](repeating: 0, count: n)
     vForce.sincos(angles, sinResult: &v, cosResult: &u)
     let z: ComplexMatrix<Float> = .init(
-        real: .init(shape: .column(length: n), elements: u),
-        imaginary: .init(shape: .column(length: n), elements: v))
+        real: .init(shape: .row(length: n), elements: u),
+        imaginary: .init(shape: .row(length: n), elements: v))
     return z
 }
 
