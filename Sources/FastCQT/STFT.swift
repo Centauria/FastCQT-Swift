@@ -29,15 +29,16 @@ public func stft(
     let lastFrameComplete = (numSamples - nFFT) % hopLength == 0
     let numFrames = (numSamples - nFFT) / hopLength + 1
 
-    guard let plan = try? PFFFT.FFT<Float>(n: nFFT) else {
-        print("Failed to create FFT plan")
-        return nil
-    }
-    let inputBuffer = plan.makeSignalBuffer()
-    let outputBuffer = plan.makeSpectrumBuffer()
     var result: ComplexMatrix<Float> = .zeros(shape: .init(rows: numFrames, columns: nFFT / 2 + 1))
 
-    for i in 0..<numFrames {
+    DispatchQueue.concurrentPerform(iterations: numFrames) { i in
+        guard let plan = try? PFFFT.FFT<Float>(n: nFFT) else {
+            print("Failed to create FFT plan")
+            return
+        }
+        let inputBuffer = plan.makeSignalBuffer()
+        let outputBuffer = plan.makeSpectrumBuffer()
+
         let length = lastFrameComplete || i == numFrames ? numSamples - i * hopLength : nFFT
         inputBuffer.withUnsafeMutableBufferPointer { destBuffer in
             inputSignal.withUnsafeBufferPointer { srcBuffer in
