@@ -1,6 +1,7 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
+import Accelerate
 import CoreML
 import Foundation
 import Numerics
@@ -11,10 +12,11 @@ public func cqtFrequencies(
 )
     -> [Float]
 {
-    let correction = powf(2.0, tuning / Float(binsPerOctave))
-    return (0..<nBins).map { i in
-        correction * fMin * powf(2.0, Float(i) / Float(binsPerOctave))
-    }
+    var freqs: [Float] = vDSP.ramp(withInitialValue: tuning, increment: 1, count: nBins)
+    vDSP.divide(freqs, Float(binsPerOctave), result: &freqs)
+    vForce.exp2(freqs, result: &freqs)
+    vDSP.multiply(fMin, freqs, result: &freqs)
+    return freqs
 }
 
 public func VQTFilterFFT(
