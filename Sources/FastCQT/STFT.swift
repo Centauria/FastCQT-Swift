@@ -1,6 +1,7 @@
 import Accelerate
 import Foundation
 import Numerics
+import PFFFT
 import Plinth
 
 public func stft(
@@ -10,7 +11,7 @@ public func stft(
     window: Windows.WindowType = .hann,
     center: Bool = true,
     normalized: Bool = true
-) -> ComplexMatrix<Float> {
+) -> ComplexMatrix<Float>? {
     var inputSignal: Matrix<Float>
     if center {
         let n = signal.count
@@ -28,14 +29,48 @@ public func stft(
     let lastFrameComplete = (numSamples - nFFT) % hopLength == 0
     let numFrames = (numSamples - nFFT) / hopLength + 1
 
-    let plan = Plinth.FFT<Float>.createSetup(shape: .row(length: nFFT))
+    guard let plan = try? PFFFT.FFT<Float>(n: nFFT) else {
+        print("Failed to create FFT plan")
+        return nil
+    }
+    let inputBuffer = plan.makeSignalBuffer()
+    let outputBuffer = plan.makeSpectrumBuffer()
     var result: ComplexMatrix<Float> = .zeros(shape: .init(rows: numFrames, columns: nFFT / 2 + 1))
 
     for i in 0..<numFrames {
         let length = lastFrameComplete || i == numFrames ? numSamples - i * hopLength : nFFT
-        var input: Matrix<Float> = .zeros(shape: .row(length: nFFT))
-        input[0, 0..<length] = inputSignal[0, i * hopLength..<i * hopLength + length]
-        result[i, 0...nFFT / 2] = input.fft1D(direction: .forward, setup: plan)[0, 0...nFFT / 2]
+        inputBuffer.withUnsafeMutableBufferPointer { destBuffer in
+            inputSignal.withUnsafeBufferPointer { srcBuffer in
+                vDSP_mmov(
+                    srcBuffer.baseAddress!.advanced(by: i * hopLength),
+                    destBuffer.baseAddress!,
+                    1, vDSP_Length(length),
+                    1, 1)
+            }
+            vDSP_vclr(destBuffer.baseAddress!, 1, vDSP_Length(nFFT - length))
+        }
+        plan.forward(signal: inputBuffer, spectrum: outputBuffer)
+        outputBuffer.withUnsafeBufferPointer { srcBuffer in
+            let bufferPtr = srcBuffer.baseAddress!
+            let realPtr = UnsafeMutableRawPointer(mutating: bufferPtr)
+                .assumingMemoryBound(to: Float.self)
+            let imagPtr = realPtr.advanced(by: 1)
+            result.real.elements.withUnsafeMutableBufferPointer { destBuffer in
+                let currentRowPtr = destBuffer.baseAddress!.advanced(by: (nFFT / 2 + 1) * i)
+                vDSP_mmov(realPtr, currentRowPtr, 1, vDSP_Length(nFFT / 2), 2, 1)
+                // currentRowPtr.advanced(by: nFFT / 2)
+                //     .update(from: realPtr.advanced(by: 1), count: 1)
+                currentRowPtr[nFFT / 2] = realPtr[1]
+            }
+            result.imaginary.elements.withUnsafeMutableBufferPointer { destBuffer in
+                let currentRowPtr = destBuffer.baseAddress!.advanced(by: (nFFT / 2 + 1) * i)
+                vDSP_mmov(
+                    imagPtr.advanced(by: 2),
+                    currentRowPtr.advanced(by: 1),
+                    1, vDSP_Length(nFFT / 2 - 1),
+                    2, 1)
+            }
+        }
     }
 
     if normalized {
