@@ -11,7 +11,7 @@ public func stft(
     window: Windows.WindowType = .hann,
     center: Bool = true,
     normalized: Bool = true
-) -> ComplexMatrix<Float>? {
+) -> ComplexMatrix<Float> {
     var inputSignal: Matrix<Float>
     if center {
         let n = signal.count
