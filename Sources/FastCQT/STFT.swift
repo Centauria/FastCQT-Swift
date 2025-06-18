@@ -29,6 +29,8 @@ public func stft(
     let lastFrameComplete = (numSamples - nFFT) % hopLength == 0
     let numFrames = (numSamples - nFFT) / hopLength + 1
 
+    let w: [Float] = window == .ones ? [] : Windows.get(type: window, M: nFFT)
+
     var result: ComplexMatrix<Float> = .zeros(shape: .init(rows: numFrames, columns: nFFT / 2 + 1))
 
     DispatchQueue.concurrentPerform(iterations: numFrames) { i in
@@ -49,6 +51,18 @@ public func stft(
                     1, 1)
             }
             vDSP_vclr(destBuffer.baseAddress!, 1, vDSP_Length(nFFT - length))
+        }
+        if window != .ones {
+            inputBuffer.withUnsafeMutableBufferPointer { destBuffer in
+                let y = destBuffer.baseAddress!
+                w.withUnsafeBufferPointer { winBuffer in
+                    vDSP_vmul(
+                        y, 1,
+                        winBuffer.baseAddress!, 1,
+                        y, 1,
+                        vDSP_Length(nFFT))
+                }
+            }
         }
         plan.forward(signal: inputBuffer, spectrum: outputBuffer)
         outputBuffer.withUnsafeBufferPointer { srcBuffer in
