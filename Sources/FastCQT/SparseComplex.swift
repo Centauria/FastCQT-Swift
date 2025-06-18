@@ -1,5 +1,6 @@
 import Accelerate
 import Numerics
+import Plinth
 
 public struct SparseMatrix_ComplexFloat {
     var _real: SparseMatrix_Float
@@ -168,4 +169,29 @@ extension SparseMatrix_ComplexFloat {
             return .init(structure: structure, data: ptr)
         }
     }
+}
+
+public func SparseMultiply(
+    _ X: ComplexMatrix<Float>,
+    _ A: SparseMatrix_ComplexFloat
+) -> ComplexMatrix<Float> {
+    let structure = A._real.structure
+    let m = X.shape.rows
+    let n = Int(structure.columnCount)
+    var Yr: Matrix<Float> = .zeros(shape: .init(rows: m, columns: n))
+    var Yi: Matrix<Float> = .zeros(shape: .init(rows: m, columns: n))
+    for i in 0..<n {
+        let start = structure.columnStarts[i]
+        let end = structure.columnStarts[i + 1]
+        for j in start..<end {
+            let k = Int(structure.rowIndices[j])
+            let ajr = A._real.data[j]
+            let aji = A._imag[j]
+            Yr[0..<m, i] += X.real[0..<m, k] * ajr
+            Yr[0..<m, i] -= X.imaginary[0..<m, k] * aji
+            Yi[0..<m, i] += X.imaginary[0..<m, k] * ajr
+            Yi[0..<m, i] += X.real[0..<m, k] * aji
+        }
+    }
+    return .init(real: Yr, imaginary: Yi)
 }
