@@ -177,20 +177,56 @@ public func SparseMultiply(
 ) -> ComplexMatrix<Float> {
     let structure = A._real.structure
     let m = X.shape.rows
+    let d = X.shape.columns
     let n = Int(structure.columnCount)
     var Yr: Matrix<Float> = .zeros(shape: .init(rows: m, columns: n))
     var Yi: Matrix<Float> = .zeros(shape: .init(rows: m, columns: n))
-    for i in 0..<n {
-        let start = structure.columnStarts[i]
-        let end = structure.columnStarts[i + 1]
-        for j in start..<end {
-            let k = Int(structure.rowIndices[j])
-            let ajr = A._real.data[j]
-            let aji = A._imag[j]
-            Yr[0..<m, i] += X.real[0..<m, k] * ajr
-            Yr[0..<m, i] -= X.imaginary[0..<m, k] * aji
-            Yi[0..<m, i] += X.imaginary[0..<m, k] * ajr
-            Yi[0..<m, i] += X.real[0..<m, k] * aji
+    Yr.elements.withUnsafeMutableBufferPointer {
+        let yr = $0.baseAddress!
+        Yi.elements.withUnsafeMutableBufferPointer {
+            let yi = $0.baseAddress!
+            X.real.elements.withUnsafeBufferPointer {
+                let xr = $0.baseAddress!
+                X.imaginary.elements.withUnsafeBufferPointer {
+                    let xi = $0.baseAddress!
+                    let ar = A._real.data
+                    let ai = A.imag.data
+                    for i in 0..<n {
+                        let start = structure.columnStarts[i]
+                        let end = structure.columnStarts[i + 1]
+                        for j in start..<end {
+                            let k = Int(structure.rowIndices[j])
+                            vDSP_vsma(
+                                xr.advanced(by: k), d,
+                                ar.advanced(by: j),
+                                yr.advanced(by: i), n,
+                                yr.advanced(by: i), n,
+                                vDSP_Length(m))
+                            let aij = ai.advanced(by: j)
+                            vDSP_vneg(aij, 1, aij, 1, vDSP_Length(1))
+                            vDSP_vsma(
+                                xi.advanced(by: k), d,
+                                aij,
+                                yr.advanced(by: i), n,
+                                yr.advanced(by: i), n,
+                                vDSP_Length(m))
+                            vDSP_vneg(aij, 1, aij, 1, vDSP_Length(1))
+                            vDSP_vsma(
+                                xr.advanced(by: k), d,
+                                aij,
+                                yi.advanced(by: i), n,
+                                yi.advanced(by: i), n,
+                                vDSP_Length(m))
+                            vDSP_vsma(
+                                xi.advanced(by: k), d,
+                                ar.advanced(by: j),
+                                yi.advanced(by: i), n,
+                                yi.advanced(by: i), n,
+                                vDSP_Length(m))
+                        }
+                    }
+                }
+            }
         }
     }
     return .init(real: Yr, imaginary: Yi)
