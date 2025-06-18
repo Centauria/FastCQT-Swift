@@ -19,7 +19,7 @@ public func cqtFrequencies(
     return freqs
 }
 
-public func VQTFilterFFT(
+public func vqtFilterFFT(
     sr: Float,
     freqs: [Float],
     filterScale: Float,
