@@ -64,3 +64,15 @@ public func vqtFilterFFT(
 
     return fftBasisSparse
 }
+
+public func cqtResponse(
+    y: [Float],
+    nFFT: Int,
+    hopLength: Int,
+    fftBasis: SparseMatrix_ComplexFloat,
+    window: Windows.WindowType = .ones
+) -> ComplexMatrix<Float> {
+    let D = stft(signal: y, nFFT: nFFT, hopLength: hopLength, window: window)
+    let outputFlat = SparseMultiply(D, fftBasis)
+    return outputFlat
+}
