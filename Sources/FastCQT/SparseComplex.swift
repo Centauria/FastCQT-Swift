@@ -195,14 +195,14 @@ public func SparseMultiply(
                     for i in 0..<n {
                         let start = structure.columnStarts[i]
                         let end = structure.columnStarts[i + 1]
+                        let yri = yr.advanced(by: i)
+                        let yii = yi.advanced(by: i)
                         for j in start..<end {
                             let k = Int(structure.rowIndices[j])
                             let xrk = xr.advanced(by: k)
                             let xik = xi.advanced(by: k)
                             let arj = ar.advanced(by: j)
                             let aij = ai.advanced(by: j)
-                            let yri = yr.advanced(by: i)
-                            let yii = yi.advanced(by: i)
                             vDSP_vsma(
                                 xrk, d,
                                 arj,
@@ -243,4 +243,39 @@ public func SparseMultiply(
         }
     }
     return .init(real: Yr, imaginary: Yi)
+}
+
+public func SparseMultiply(
+    _ X: Matrix<Float>,
+    _ A: SparseMatrix_Float
+) -> Matrix<Float> {
+    let structure = A.structure
+    let m = X.shape.rows
+    let d = X.shape.columns
+    let n = Int(structure.columnCount)
+    var Y: Matrix<Float> = .zeros(shape: .init(rows: m, columns: n))
+    Y.elements.withUnsafeMutableBufferPointer {
+        let y = $0.baseAddress!
+        X.elements.withUnsafeBufferPointer {
+            let x = $0.baseAddress!
+            let a = A.data
+            for i in 0..<n {
+                let start = structure.columnStarts[i]
+                let end = structure.columnStarts[i + 1]
+                let yi = y.advanced(by: i)
+                for j in start..<end {
+                    let k = Int(structure.rowIndices[j])
+                    let xk = x.advanced(by: k)
+                    let aj = a.advanced(by: j)
+                    vDSP_vsma(
+                        xk, d,
+                        aj,
+                        yi, n,
+                        yi, n,
+                        vDSP_Length(m))
+                }
+            }
+        }
+    }
+    return Y
 }
