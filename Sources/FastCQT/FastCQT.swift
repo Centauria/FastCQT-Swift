@@ -76,3 +76,64 @@ public func cqtResponse(
     let outputFlat = SparseMultiply(D, fftBasis)
     return outputFlat
 }
+
+public func cqtResponse(
+    y: [Float],
+    nFFT: Int,
+    hopLength: Int,
+    fftBasis: SparseMatrix_Float,
+    window: Windows.WindowType = .ones
+) -> Matrix<Float> {
+    let D = stft(signal: y, nFFT: nFFT, hopLength: hopLength, window: window)
+    let Dmag = D.absolute()
+    let outputFlat = SparseMultiply(Dmag, fftBasis)
+    return outputFlat
+}
+
+public func pseudoCQT(
+    y: [Float],
+    sr: Float = 22050,
+    hopLength: Int = 512,
+    fmin: Float = 32.70319566257483,
+    nBins: Int = 84,
+    binsPerOctave: Int = 12,
+    tuning: Float = 0,
+    filterScale: Float = 1,
+    norm: Float = 1,
+    sparsity: Float = 0.01,
+    window: Windows.WindowType = .hann,
+    scale: Bool = true
+) -> Matrix<Float> {
+    let fm = fmin * powf(2.0, tuning / Float(binsPerOctave))
+    let freqs = cqtFrequencies(nBins: nBins, fMin: fm, binsPerOctave: binsPerOctave)
+
+    let alpha =
+        nBins == 1
+        ? etRelativeBW(binsPerOctave: binsPerOctave)
+        : relativeBandwidth(freqs: freqs)
+
+    let fftBasis = vqtFilterFFT(
+        sr: sr, freqs: freqs, filterScale: filterScale,
+        norm: norm, sparsity: sparsity,
+        hopLength: hopLength, window: window, alpha: alpha)
+    let nFFT = Int(2 * (fftBasis.real.structure.rowCount - 1))
+
+    let fftBasisMag = fftBasis.absolute()
+    var output = cqtResponse(
+        y: y, nFFT: nFFT, hopLength: hopLength,
+        fftBasis: fftBasisMag, window: .hann)
+
+    if scale {
+        output /= sqrtf(Float(nFFT))
+    } else {
+        let numFrames = output.shape.rows
+        var (lengths, _) = waveletLengths(freqs: freqs, sr: sr, window: window, alpha: alpha)
+        vDSP.divide(lengths, Float(nFFT), result: &lengths)
+        vForce.sqrt(lengths, result: &lengths)
+        for i in 0..<nBins {
+            output[0..<numFrames, i] /= lengths[i]
+        }
+    }
+
+    return output
+}
