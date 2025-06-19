@@ -11,9 +11,9 @@ public func windowBandwidth(window: [Float]) -> Float {
     return y
 }
 
-public func etRelativeBW(binsPerOctave: Int) -> Float {
+public func etRelativeBW(binsPerOctave: Int) -> [Float] {
     let r = powf(2.0, 1.0 / Float(binsPerOctave))
-    return r
+    return [r]
 }
 
 public func relativeBandwidth(freqs: [Float]) -> [Float] {
