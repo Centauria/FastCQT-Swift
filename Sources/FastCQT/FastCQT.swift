@@ -51,12 +51,14 @@ public func vqtFilterFFT(
     }
 
     let plan = FFT<Float>.createSetup(shape: .row(length: nFFT))
+    defer {
+        FFT<Float>.destroySetup(plan)
+    }
     var basisExtended: ComplexMatrix<Float> = .zeros(shape: .init(rows: n, columns: nFFT))
     basisExtended[0..<n, 0..<initFFT] = basis
 
     for i in 0..<n {
-        basisExtended[i, 0..<nFFT] = basisExtended[i, 0..<nFFT].fft1D(
-            direction: .forward, setup: plan)
+        basisExtended[i, 0..<nFFT] = basisExtended[i, 0..<nFFT].fft1D(setup: plan)
     }
 
     let fftBasis = basisExtended[0..<n, 0...nFFT / 2]
