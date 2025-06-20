@@ -103,7 +103,7 @@ public func sparsify_rows(
             }
         }
     }
-    let (reals, imags) = values.withUnsafeBufferPointer { buf in
+    var (reals, imags) = values.withUnsafeBufferPointer { buf in
         let count = buf.count
         let reals: [Float] = [Float](unsafeUninitializedCapacity: count) { ptr, initializedCount in
             for i in 0..<count {
@@ -123,7 +123,7 @@ public func sparsify_rows(
         _real: SparseConvertFromCoordinate(
             Int32(ncols), Int32(nrows),
             values.count, UInt8(1), .init(),
-            &rowIndices, &columnIndices, reals),
+            &rowIndices, &columnIndices, &reals),
         _imag: imags
     )
 }
