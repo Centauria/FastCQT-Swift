@@ -97,7 +97,7 @@ public func sparsify_rows(
         }
         for k in 0..<ncols {
             if mags[i, k] >= mark {
-                values.append(x[i, k])
+                values.append(xi[i, k])
                 rowIndices.append(Int32(k))
                 columnIndices.append(Int32(i))
             }
