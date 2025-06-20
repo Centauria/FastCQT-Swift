@@ -57,6 +57,63 @@ final class FastCQTTests: XCTestCase {
         assert(Y == result)
     }
 
+    func testSparseMultiply2() throws {
+        let rowCount = Int32(400)
+        let columnCount = Int32(3)
+        let blockCount = 9
+        let blockSize = UInt8(1)
+        let rowIndices: [Int32] = [2, 58, 303, 58, 70, 225, 10, 59, 111]
+        let columnIndices: [Int32] = [0, 0, 0, 1, 1, 1, 2, 2, 2]
+        let dataReal: [Float] = [-4, 1, 2, -1, -1, 1, 0.5, 0.5, -1]
+
+        let A = SparseConvertFromCoordinate(
+            rowCount, columnCount,
+            blockCount, blockSize,
+            .init(),
+            rowIndices, columnIndices,
+            dataReal)
+        defer {
+            SparseCleanup(A)
+        }
+
+        let X: Matrix<Float> = .init(shape: .init(rows: 24, columns: 400)) { i, j in
+            Float(i) / 24 * (Float(j) / 400 - 0.5) - Float(j) * 0.01
+        }
+
+        let Y = SparseMultiply(X, A)
+
+        let result: Matrix<Float> = .init(
+            shape: .init(rows: 24, columns: 3),
+            elements: [
+                -6.56, -0.97, 0.76500005,
+                -6.4708333, -0.9390625, 0.75703126,
+                -6.3816667, -0.90812516, 0.74906254,
+                -6.2925, -0.8771875, 0.74109375,
+                -6.203333, -0.84624994, 0.7331251,
+                -6.1141667, -0.8153126, 0.7251563,
+                -6.025, -0.78437495, 0.7171875,
+                -5.935833, -0.7534375, 0.70921886,
+                -5.846667, -0.7225001, 0.70125,
+                -5.7575, -0.69156253, 0.6932813,
+                -5.668333, -0.660625, 0.6853125,
+                -5.579167, -0.62968755, 0.6773437,
+                -5.49, -0.5987501, 0.66937506,
+                -5.400833, -0.56781244, 0.6614063,
+                -5.311667, -0.5368751, 0.6534375,
+                -5.2225, -0.5059376, 0.6454688,
+                -5.133333, -0.4749999, 0.6375,
+                -5.0441666, -0.4440626, 0.6295312,
+                -4.955, -0.41312504, 0.62156254,
+                -4.8658333, -0.38218737, 0.61359376,
+                -4.7766666, -0.35125017, 0.6056251,
+                -4.6875, -0.3203125, 0.59765625,
+                -4.598333, -0.28937495, 0.5896876,
+                -4.5091667, -0.25843763, 0.5817188,
+            ]
+        )
+        assert((Y - result).absolute().maximum() < 1e-7)
+    }
+
     func testComplexSparseMultiply() throws {
         let rowCount = Int32(4)
         let columnCount = Int32(3)
