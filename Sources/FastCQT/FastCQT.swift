@@ -119,6 +119,9 @@ public func pseudoCQT(
     let nFFT = Int(2 * (fftBasis.real.structure.rowCount - 1))
 
     let fftBasisMag = fftBasis.absolute()
+    defer {
+        SparseCleanup(fftBasisMag)
+    }
     var output = cqtResponse(
         y: y, nFFT: nFFT, hopLength: hopLength,
         fftBasis: fftBasisMag, window: .hann)
