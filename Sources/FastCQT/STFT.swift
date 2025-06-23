@@ -96,3 +96,16 @@ public func stft(
 
     return result
 }
+
+public func spectrogram(
+    y: [Float],
+    nFFT: Int = 2048,
+    hopLength: Int? = 512,
+    power: Float = 1,
+    window: Windows.WindowType = .hann,
+    center: Bool = true
+) -> Matrix<Float> {
+    stft(signal: y, nFFT: nFFT, hopLength: hopLength, window: window, center: center)
+        .absolute()
+        ** power
+}
