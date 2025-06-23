@@ -127,3 +127,38 @@ public func sparsify_rows(
         _imag: imags
     )
 }
+
+public func gradient(y: Matrix<Float>) -> Matrix<Float> {
+    let row = y.shape.rows
+    let col = y.shape.columns
+    let g: Matrix<Float> = .init(
+        shape: y.shape,
+        elements: [Float](unsafeUninitializedCapacity: row * col) {
+            ptr, count in
+            let output = ptr.baseAddress!
+            y.elements.withUnsafeBufferPointer {
+                let input = $0.baseAddress!
+                vDSP_vsub(
+                    input.advanced(col), 1,
+                    input, 1,
+                    output, 1,
+                    vDSP_Length(col))
+                for i in 1..<row - 1 {
+                    vDSP_vsub(
+                        input.advanced((i + 1) * col), 1,
+                        input.advanced((i - 1) * col), 1,
+                        output.advanced(i * col), 1,
+                        vDSP_Length(col))
+                }
+                vDSP_vsub(
+                    input.advanced((row - 1) * col), 1,
+                    input.advanced((row - 2) * col), 1,
+                    output.advanced((row - 1) * col), 1,
+                    vDSP_Length(col))
+                let b: Float = 2
+                vDSP_vsdiv(output.advanced(col), 1, &b, output.advanced(col), 1, (row - 2) * col)
+            }
+            count = row * col
+        })
+    return g
+}
