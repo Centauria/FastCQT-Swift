@@ -140,7 +140,7 @@ public func pseudoCQT(
         vDSP.divide(lengths, Float(nFFT), result: &lengths)
         vForce.sqrt(lengths, result: &lengths)
         for i in 0..<nBins {
-            output[0..<numFrames, i] /= lengths[i]
+            output[0..<numFrames, i] *= lengths[i]
         }
     }
 
