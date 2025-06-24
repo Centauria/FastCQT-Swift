@@ -179,6 +179,7 @@ public func SparseMultiply(
     let m = X.shape.rows
     let d = X.shape.columns
     let n = Int(structure.columnCount)
+    precondition(d == structure.rowCount)
     let nnz = structure.columnStarts[n]
     var Yr: Matrix<Float> = .zeros(shape: .init(rows: m, columns: n))
     var Yi: Matrix<Float> = .zeros(shape: .init(rows: m, columns: n))
@@ -253,6 +254,7 @@ public func SparseMultiply(
     let m = X.shape.rows
     let d = X.shape.columns
     let n = Int(structure.columnCount)
+    precondition(d == structure.rowCount)
     var Y: Matrix<Float> = .zeros(shape: .init(rows: m, columns: n))
     Y.elements.withUnsafeMutableBufferPointer {
         let y = $0.baseAddress!
