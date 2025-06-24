@@ -8,7 +8,7 @@ import Numerics
 import Plinth
 
 public func fftFrequencies(sr: Float = 22050, nFFT: Int = 2048) -> [Float] {
-    vDSP.ramp(0...sr / 2, 1 + nFFT / 2)
+    vDSP.ramp(in: 0...sr / 2, count: 1 + nFFT / 2)
 }
 
 public func cqtFrequencies(

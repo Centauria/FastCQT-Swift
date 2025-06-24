@@ -11,7 +11,8 @@ public func parabolicInterpolation(_ x: [Float]) -> [Float] {
     let b_ = vDSP.absolute(b)
 
     let shifts = [Float](unsafeUninitializedCapacity: n) { ptr, count in
-        ptr[0] = ptr[n - 1] = 0
+        ptr[0] = 0
+        ptr[n - 1] = 0
         for i in 0..<n - 2 {
             ptr[i + 1] = b_[i] > a_[i] ? 0 : b[i] / a[i]
         }
@@ -35,5 +36,5 @@ public func piptrack(
     let S = spectrogram(y: y, nFFT: nFFT, hopLength: hopLength, window: window, center: center)
     let fMin = max(fmin, 0)
     let fMax = min(fmax, sr / 2)
-    
+
 }

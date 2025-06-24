@@ -139,24 +139,28 @@ public func gradient(y: Matrix<Float>) -> Matrix<Float> {
             y.elements.withUnsafeBufferPointer {
                 let input = $0.baseAddress!
                 vDSP_vsub(
-                    input.advanced(col), 1,
+                    input.advanced(by: col), 1,
                     input, 1,
                     output, 1,
                     vDSP_Length(col))
                 for i in 1..<row - 1 {
                     vDSP_vsub(
-                        input.advanced((i + 1) * col), 1,
-                        input.advanced((i - 1) * col), 1,
-                        output.advanced(i * col), 1,
+                        input.advanced(by: (i + 1) * col), 1,
+                        input.advanced(by: (i - 1) * col), 1,
+                        output.advanced(by: i * col), 1,
                         vDSP_Length(col))
                 }
                 vDSP_vsub(
-                    input.advanced((row - 1) * col), 1,
-                    input.advanced((row - 2) * col), 1,
-                    output.advanced((row - 1) * col), 1,
+                    input.advanced(by: (row - 1) * col), 1,
+                    input.advanced(by: (row - 2) * col), 1,
+                    output.advanced(by: (row - 1) * col), 1,
                     vDSP_Length(col))
-                let b: Float = 2
-                vDSP_vsdiv(output.advanced(col), 1, &b, output.advanced(col), 1, (row - 2) * col)
+                var b: Float = 2
+                vDSP_vsdiv(
+                    output.advanced(by: col), 1,
+                    &b,
+                    output.advanced(by: col), 1,
+                    vDSP_Length((row - 2) * col))
             }
             count = row * col
         })
