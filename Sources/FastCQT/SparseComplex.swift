@@ -163,11 +163,10 @@ extension SparseMatrix_ComplexFloat {
     public func absolute() -> SparseMatrix_Float {
         let structure = real.structure
         let r = Array(UnsafeBufferPointer(start: real.data, count: _imag.count))
-        var a = vDSP.hypot(r, _imag)
-        return a.withUnsafeMutableBufferPointer { buf in
-            let ptr = buf.baseAddress!
-            return .init(structure: structure, data: ptr)
-        }
+        let a = vDSP.hypot(r, _imag)
+        let ptr = UnsafeMutablePointer<Float>.allocate(capacity: a.count)
+        ptr.initialize(from: a, count: a.count)
+        return .init(structure: structure, data: ptr)
     }
 }
 
