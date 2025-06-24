@@ -82,7 +82,8 @@ public func sparsify_rows(
     //     accumulated += mags[0..<nrows, i]
     //     mags[0..<nrows, i] = accumulated
     // }
-    var values: [Complex<Float>] = []
+    var reals: [Float] = []
+    var imags: [Float] = []
     var rowIndices: [Int32] = []
     var columnIndices: [Int32] = []
     for i in 0..<nrows {
@@ -97,32 +98,18 @@ public func sparsify_rows(
         }
         for k in 0..<ncols {
             if mags[i, k] >= mark {
-                values.append(xi[i, k])
+                let z = xi[i, k]
+                reals.append(z.real)
+                imags.append(z.imaginary)
                 rowIndices.append(Int32(k))
                 columnIndices.append(Int32(i))
             }
         }
     }
-    var (reals, imags) = values.withUnsafeBufferPointer { buf in
-        let count = buf.count
-        let reals: [Float] = [Float](unsafeUninitializedCapacity: count) { ptr, initializedCount in
-            for i in 0..<count {
-                ptr[i] = buf[i].real
-            }
-            initializedCount = count
-        }
-        let imags: [Float] = [Float](unsafeUninitializedCapacity: count) { ptr, initializedCount in
-            for i in 0..<count {
-                ptr[i] = buf[i].imaginary
-            }
-            initializedCount = count
-        }
-        return (reals, imags)
-    }
     return .init(
         _real: SparseConvertFromCoordinate(
             Int32(ncols), Int32(nrows),
-            values.count, UInt8(1), .init(),
+            reals.count, UInt8(1), .init(),
             &rowIndices, &columnIndices, &reals),
         _imag: imags
     )
