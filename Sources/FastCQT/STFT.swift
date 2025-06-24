@@ -88,7 +88,6 @@ public func stft(
             }
         }
     }
-    result *= Float(0.5).squareRoot()
 
     if !normalized {
         result *= sqrtf(Float(nFFT))
