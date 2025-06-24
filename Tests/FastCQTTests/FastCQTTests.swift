@@ -114,6 +114,38 @@ final class FastCQTTests: XCTestCase {
         assert((Y - result).absolute().maximum() < 1e-7)
     }
 
+    func testRandomSparseMultiply() throws {
+        for _ in 1...10 {
+            let m = Int.random(in: 2...30000)
+            let n = Int.random(in: 2...1000)
+            let d = Int.random(in: 2...100)
+            let blockCount = Int.random(in: 3...d * n / 10)
+            let blockSize = UInt8(1)
+            var index = Array(0..<d * n)
+            index.shuffle()
+            let rowIndices: [Int32] = index.prefix(blockCount).map { Int32($0 % d) }
+            let columnIndices: [Int32] = index.prefix(blockCount).map { Int32($0 / d) }
+            let dataReal: [Float] = rowIndices.map { _ in Float.random(in: -2...2) }
+
+            let A = SparseConvertFromCoordinate(
+                Int32(d), Int32(n),
+                blockCount, blockSize,
+                .init(),
+                rowIndices, columnIndices,
+                dataReal)
+            defer {
+                SparseCleanup(A)
+            }
+
+            let X: Matrix<Float> = .random(shape: .init(rows: m, columns: d), in: -1...1)
+
+            let Y = SparseMultiply(X, A)
+            let result = SparseMultiplyNaïve(X, A)
+
+            assert((Y - result).absolute().maximum() < 1e-5)
+        }
+    }
+
     func testComplexSparseMultiply() throws {
         let rowCount = Int32(4)
         let columnCount = Int32(3)

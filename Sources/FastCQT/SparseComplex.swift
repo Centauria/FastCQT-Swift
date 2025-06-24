@@ -281,3 +281,27 @@ public func SparseMultiply(
     }
     return Y
 }
+
+public func SparseMultiplyNaïve(
+    _ X: Matrix<Float>,
+    _ A: SparseMatrix_Float
+) -> Matrix<Float> {
+    let structure = A.structure
+    let m = X.shape.rows
+    let d = X.shape.columns
+    let n = Int(structure.columnCount)
+    precondition(d == structure.rowCount)
+    var Y: Matrix<Float> = .zeros(shape: .init(rows: m, columns: n))
+    let a = A.data
+    for u in 0..<m {
+        for i in 0..<n {
+            let start = structure.columnStarts[i]
+            let end = structure.columnStarts[i + 1]
+            for j in start..<end {
+                let k = Int(structure.rowIndices[j])
+                Y[u, i] += X[u, k] * a[j]
+            }
+        }
+    }
+    return Y
+}
