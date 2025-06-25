@@ -11,32 +11,38 @@ public func earlyDownsampleCount(
     return min(downsampleCount1, downsampleCount2)
 }
 
-public func downsample(x: [Float], downsampleFactor: Int, scale: Bool) -> [Float] {
+public func resample(
+    x: [Float], inSampleRate: Double, outSampleRate: Double, scale: Bool
+) -> [Float] {
+    let resampleFactor = outSampleRate / inSampleRate
     let inum = x.count
-    let onum = divceil(inum, downsampleFactor)
-    var output = [Float](repeating: 0, count: onum)
+    let onum = Int(ceil(Double(inum) * resampleFactor))
     var q_spec = soxr_quality_spec(UInt(SOXR_HQ), 0)
     var idone = 0
     var odone = 0
 
-    x.withUnsafeBufferPointer { xptr in
-        output.withUnsafeMutableBufferPointer { yptr in
+    var output = [Float](unsafeUninitializedCapacity: onum) { y, count in
+        let yptr = y.baseAddress!
+        x.withUnsafeBufferPointer {
+            let xptr = $0.baseAddress!
             _ = soxr_oneshot(
-                Double(downsampleFactor), 1.0, 1,
-                xptr.baseAddress, inum, &idone,
-                yptr.baseAddress, onum, &odone,
+                inSampleRate, outSampleRate, 1,
+                xptr, inum, &idone,
+                yptr, onum, &odone,
                 nil, &q_spec, nil)
         }
-    }
-    while odone < onum {
-        output[odone] = 0
-        odone += 1
+        vDSP_vclr(yptr.advanced(by: odone), 1, vDSP_Length(onum - odone))
+        count = onum
     }
     if scale {
-        let factor = sqrt(Float(downsampleFactor))
-        vDSP.multiply(factor, output, result: &output)
+        let factor = Float(resampleFactor).squareRoot()
+        vDSP.divide(output, factor, result: &output)
     }
     return output
+}
+
+public func downsample(x: [Float], downsampleFactor: Int, scale: Bool) -> [Float] {
+    resample(x: x, inSampleRate: Double(downsampleFactor), outSampleRate: 1, scale: scale)
 }
 
 public func earlyDownsample(
