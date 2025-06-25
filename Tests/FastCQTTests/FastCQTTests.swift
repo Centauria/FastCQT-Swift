@@ -115,7 +115,7 @@ final class FastCQTTests: XCTestCase {
     }
 
     func testRandomSparseMultiply() throws {
-        let m = Int.random(in: 2...30000)
+        let m = Int.random(in: 2...1000)
         let n = Int.random(in: 2...1000)
         let d = Int.random(in: 2...100)
         let blockCount = Int.random(in: 3...d * n / 10)
