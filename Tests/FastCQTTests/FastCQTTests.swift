@@ -213,8 +213,8 @@ final class FastCQTTests: XCTestCase {
                 0.54920612, 0.98290162, 0.91595992, 0.17742043, 0.45801586,
                 0.43670925, 0.22165366, 0.07434987, 0.10104737, 0.54333287,
             ])
-        let y = parabolicInterpolation(x)
-        let result: Matrix<Float> = .init(
+        let y0 = parabolicInterpolation(x)
+        let result0: Matrix<Float> = .init(
             shape: .init(rows: 4, columns: 5),
             elements: [
                 0, 0, 0, 0, 0,
@@ -223,7 +223,18 @@ final class FastCQTTests: XCTestCase {
                 0, 0, 0, 0, 0,
             ]
         )
-        assert((y - result).absolute().maximum() < 1e-7)
+        assert((y0 - result0).absolute().maximum() < 1e-7)
+        let y1 = parabolicInterpolation(x, axis: 1)
+        let result1: Matrix<Float> = .init(
+            shape: .init(rows: 4, columns: 5),
+            elements: [
+                0, -0.06249992, 0.05944121, 0.38335496, 0,
+                0, -0.16507956, 0.03154699, 0.04950313, 0,
+                0, 0.366287, -0.59967529, 0.22467293, 0,
+                0, 0, 0.34656726, -0.56424029, 0,
+            ]
+        )
+        assert((y1 - result1).absolute().maximum() < 1e-7)
     }
 
     func testGradient() throws {
