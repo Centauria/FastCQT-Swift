@@ -116,6 +116,7 @@ public func sparsify_rows(
 }
 
 public func gradient(y: Matrix<Float>, axis: Int = 0) -> Matrix<Float> {
+    precondition((0...1).contains(axis), "axis must be 0(row) or 1(column)")
     let row = y.shape.rows
     let col = y.shape.columns
     let g: Matrix<Float>
