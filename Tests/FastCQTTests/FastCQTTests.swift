@@ -196,4 +196,33 @@ final class FastCQTTests: XCTestCase {
             ))
         assert(Y == result)
     }
+
+    func testParabolicInterpolationArray() throws {
+        let x: [Float] = [0, 1, 2, 0, 1, 2, -1, 0, 2, 1]
+        let y = parabolicInterpolation(x)
+        let result: [Float] = [0, 0, -0.16666667, 0.16666667, 0, -0.25, 0.25, 0, 0.16666667, 0]
+        assert(y == result)
+    }
+
+    func testParabolicInterpolationMatrix() throws {
+        let x: Matrix<Float> = .init(
+            shape: .init(rows: 4, columns: 5),
+            elements: [
+                0.84539491, 0.31397233, 0.99722973, 0.45916594, 0.53021606,
+                0.43493118, 0.85664736, 0.01921022, 0.75724459, 0.15218493,
+                0.54920612, 0.98290162, 0.91595992, 0.17742043, 0.45801586,
+                0.43670925, 0.22165366, 0.07434987, 0.10104737, 0.54333287,
+            ])
+        let y = parabolicInterpolation(x)
+        let result: Matrix<Float> = .init(
+            shape: .init(rows: 4, columns: 5),
+            elements: [
+                0, 0, 0, 0, 0,
+                0.28222505, 0.80318915, 0.02167462, -0.1604651, 0.05278857,
+                0.00392041, -0.35774203, 0.01585968, 0.65169907, 0.88690079,
+                0, 0, 0, 0, 0,
+            ]
+        )
+        assert((y - result).absolute().maximum() < 1e-7)
+    }
 }
