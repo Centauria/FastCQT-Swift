@@ -269,4 +269,31 @@ final class FastCQTTests: XCTestCase {
         )
         assert((y1 - result1).absolute().maximum() < 1e-7)
     }
+
+    func testMaximumByAxis() throws {
+        let x: Matrix<Float> = .init(
+            shape: .init(rows: 4, columns: 5),
+            elements: [
+                0.84539491, 0.31397233, 0.99722973, 0.45916594, 0.53021606,
+                0.43493118, 0.85664736, 0.01921022, 0.75724459, 0.15218493,
+                0.54920612, 0.98290162, 0.91595992, 0.17742043, 0.45801586,
+                0.43670925, 0.22165366, 0.07434987, 0.10104737, 0.54333287,
+            ])
+        let y0 = x.maximum(axis: 0)
+        let result0: Matrix<Float> = .init(
+            shape: .init(rows: 1, columns: 5),
+            elements: [
+                0.84539491, 0.98290162, 0.99722973, 0.75724459, 0.54333287,
+            ]
+        )
+        assert(y0 == result0)
+        let y1 = x.maximum(axis: 1)
+        let result1: Matrix<Float> = .init(
+            shape: .init(rows: 4, columns: 1),
+            elements: [
+                0.99722973, 0.85664736, 0.98290162, 0.54333287,
+            ]
+        )
+        assert(y1 == result1)
+    }
 }

@@ -191,3 +191,42 @@ public func gradient(y: Matrix<Float>, axis: Int = 0) -> Matrix<Float> {
     }
     return g
 }
+
+extension Matrix where Scalar == Float {
+    public func maximum(axis: Int) -> Matrix {
+        precondition((0...1).contains(axis))
+        let m = shape.rows
+        let n = shape.columns
+        return if axis == 0 {
+            .init(
+                shape: .row(length: n),
+                elements: [Scalar](unsafeUninitializedCapacity: n) {
+                    yptr, count in
+                    let y = yptr.baseAddress!
+                    elements.withUnsafeBufferPointer {
+                        let x = $0.baseAddress!
+                        for i in 0..<n {
+                            vDSP_maxv(x.advanced(by: i), n, y.advanced(by: i), vDSP_Length(m))
+                        }
+                    }
+                    count = n
+                }
+            )
+        } else {
+            .init(
+                shape: .column(length: m),
+                elements: [Scalar](unsafeUninitializedCapacity: m) {
+                    yptr, count in
+                    let y = yptr.baseAddress!
+                    elements.withUnsafeBufferPointer {
+                        let x = $0.baseAddress!
+                        for i in 0..<m {
+                            vDSP_maxv(x.advanced(by: i * n), 1, y.advanced(by: i), vDSP_Length(n))
+                        }
+                    }
+                    count = m
+                }
+            )
+        }
+    }
+}
