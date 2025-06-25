@@ -23,20 +23,38 @@ public func parabolicInterpolation(_ x: [Float]) -> [Float] {
     return shifts
 }
 
-public func parabolicInterpolation(_ x: Matrix<Float>) -> Matrix<Float> {
+public func parabolicInterpolation(_ x: Matrix<Float>, axis: Int = 0) -> Matrix<Float> {
+    precondition((0...1).contains(axis), "axis must be 0(row) or 1(column)")
     let m = x.shape.columns
     let n = x.shape.rows
     precondition(n >= 3, "Input matrix rows must be at least 3")
-    let a = x[2..<n, 0..<m] + x[0..<n - 2, 0..<m] - 2.0 * x[1..<n - 1, 0..<m]
-    let b = (x[0..<n - 2, 0..<m] - x[2..<n, 0..<m]) / 2.0
-    let a_ = a.absolute()
-    let b_ = b.absolute()
 
     var shifts: Matrix<Float> = .zeros(shape: x.shape)
-    shifts[1..<n - 1, 0..<m] =
-        (a_[0..<n - 2, 0..<m] - b_[0..<n - 2, 0..<m] >= 0)
-        * b[0..<n - 2, 0..<m]
-        / a[0..<n - 2, 0..<m]
+    if axis == 0 {
+        let all = 0..<m
+        let head = 0..<n - 2
+        let mid = 1..<n - 1
+        let tail = 2..<n
+        let a = x[tail, all] + x[head, all] - 2.0 * x[mid, all]
+        let b = (x[head, all] - x[tail, all]) / 2.0
+        let a_ = a.absolute()
+        let b_ = b.absolute()
+        shifts[mid, all] =
+            (a_[head, all] - b_[head, all] >= 0)
+            * b[head, all] / a[head, all]
+    } else if axis == 1 {
+        let all = 0..<n
+        let head = 0..<m - 2
+        let mid = 1..<m - 1
+        let tail = 2..<m
+        let a = x[all, tail] + x[all, head] - 2.0 * x[all, mid]
+        let b = (x[all, head] - x[all, tail]) / 2.0
+        let a_ = a.absolute()
+        let b_ = b.absolute()
+        shifts[all, mid] =
+            (a_[all, head] - b_[all, head] >= 0)
+            * b[all, head] / a[all, head]
+    }
 
     return shifts
 }
@@ -56,5 +74,6 @@ public func piptrack(
     let fMin = max(fmin, 0)
     let fMax = min(fmax, sr / 2)
     let fftFreqs = fftFrequencies(sr: sr, nFFT: nFFT)
-    let avg = gradient(y: S)
+    let avg = gradient(y: S, axis: 1)
+    let c = 1
 }
