@@ -115,41 +115,78 @@ public func sparsify_rows(
     )
 }
 
-public func gradient(y: Matrix<Float>) -> Matrix<Float> {
+public func gradient(y: Matrix<Float>, axis: Int = 0) -> Matrix<Float> {
     let row = y.shape.rows
     let col = y.shape.columns
-    let g: Matrix<Float> = .init(
-        shape: y.shape,
-        elements: [Float](unsafeUninitializedCapacity: row * col) {
-            ptr, count in
-            let output = ptr.baseAddress!
-            y.elements.withUnsafeBufferPointer {
-                let input = $0.baseAddress!
-                vDSP_vsub(
-                    input.advanced(by: col), 1,
-                    input, 1,
-                    output, 1,
-                    vDSP_Length(col))
-                for i in 1..<row - 1 {
+    let g: Matrix<Float>
+    if axis == 0 {
+        g = .init(
+            shape: y.shape,
+            elements: [Float](unsafeUninitializedCapacity: row * col) {
+                ptr, count in
+                let output = ptr.baseAddress!
+                y.elements.withUnsafeBufferPointer {
+                    let input = $0.baseAddress!
                     vDSP_vsub(
-                        input.advanced(by: (i + 1) * col), 1,
-                        input.advanced(by: (i - 1) * col), 1,
-                        output.advanced(by: i * col), 1,
+                        input, 1,
+                        input.advanced(by: col), 1,
+                        output, 1,
                         vDSP_Length(col))
+                    for i in 1..<row - 1 {
+                        vDSP_vsub(
+                            input.advanced(by: (i - 1) * col), 1,
+                            input.advanced(by: (i + 1) * col), 1,
+                            output.advanced(by: i * col), 1,
+                            vDSP_Length(col))
+                    }
+                    vDSP_vsub(
+                        input.advanced(by: (row - 2) * col), 1,
+                        input.advanced(by: (row - 1) * col), 1,
+                        output.advanced(by: (row - 1) * col), 1,
+                        vDSP_Length(col))
+                    var b: Float = 2
+                    vDSP_vsdiv(
+                        output.advanced(by: col), 1,
+                        &b,
+                        output.advanced(by: col), 1,
+                        vDSP_Length((row - 2) * col))
                 }
-                vDSP_vsub(
-                    input.advanced(by: (row - 1) * col), 1,
-                    input.advanced(by: (row - 2) * col), 1,
-                    output.advanced(by: (row - 1) * col), 1,
-                    vDSP_Length(col))
-                var b: Float = 2
-                vDSP_vsdiv(
-                    output.advanced(by: col), 1,
-                    &b,
-                    output.advanced(by: col), 1,
-                    vDSP_Length((row - 2) * col))
-            }
-            count = row * col
-        })
+                count = row * col
+            })
+    } else {
+        g = .init(
+            shape: y.shape,
+            elements: [Float](unsafeUninitializedCapacity: row * col) {
+                ptr, count in
+                let output = ptr.baseAddress!
+                y.elements.withUnsafeBufferPointer {
+                    let input = $0.baseAddress!
+                    var b: Float = 2
+                    vDSP_vsub(
+                        input, col,
+                        input.advanced(by: 1), col,
+                        output, col,
+                        vDSP_Length(row))
+                    for i in 1..<col - 1 {
+                        vDSP_vsub(
+                            input.advanced(by: i - 1), col,
+                            input.advanced(by: i + 1), col,
+                            output.advanced(by: i), col,
+                            vDSP_Length(row))
+                        vDSP_vsdiv(
+                            output.advanced(by: i), col,
+                            &b,
+                            output.advanced(by: i), col,
+                            vDSP_Length(row))
+                    }
+                    vDSP_vsub(
+                        input.advanced(by: col - 2), col,
+                        input.advanced(by: col - 1), col,
+                        output.advanced(by: col - 1), col,
+                        vDSP_Length(row))
+                }
+                count = row * col
+            })
+    }
     return g
 }
