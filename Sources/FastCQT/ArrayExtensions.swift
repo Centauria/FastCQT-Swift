@@ -1,5 +1,3 @@
-import Accelerate
-
 extension Array where Element == Float {
     func median() -> Float? {
         guard count > 0 else { return nil }
@@ -32,5 +30,15 @@ extension Array where Element: Comparable {
 
     var isAscending: Bool {
         return isEmpty || count == 1 || zip(self, dropFirst()).allSatisfy { $0 <= $1 }
+    }
+
+    var argmax: Int? {
+        guard !isEmpty else { return nil }
+        return enumerated().max(by: { $0.element < $1.element })?.offset
+    }
+
+    var argmin: Int? {
+        guard !isEmpty else { return nil }
+        return enumerated().min(by: { $0.element < $1.element })?.offset
     }
 }

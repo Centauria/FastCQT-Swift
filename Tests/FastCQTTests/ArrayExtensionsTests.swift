@@ -29,4 +29,17 @@ final class ArrayExtensionsTests: XCTestCase {
         let y = x.histogram(bins: g)
         assert(y == [1, 0, 2, 0, 4, 1, 6, 1, 0])
     }
+
+    func testArgminmax() throws {
+        let x: [Float] = [
+            0.77505197, 0.9599713, 0.22603799, 0.75261799, 0.21095125,
+            0.03115751, 0.27621601, 0.2994032, 0.41304219, 0.92051206,
+            0.11340166, 0.27630736, 0.82167019, 0.04333095, 0.03576075,
+            0.06041459, 0.14715272, 0.85320324, 0.33045069, 0.89577716,
+        ]
+        let imin = x.argmin
+        let imax = x.argmax
+        assert(imin == 5)
+        assert(imax == 1)
+    }
 }
