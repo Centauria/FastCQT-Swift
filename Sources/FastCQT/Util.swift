@@ -191,3 +191,8 @@ public func gradient(y: Matrix<Float>, axis: Int = 0) -> Matrix<Float> {
     }
     return g
 }
+
+public func HzToOcts(frequencies: [Float], tuning: Float = 0, binsPerOctave: Int = 12) -> [Float] {
+    let A440 = 440.0 * exp2(tuning / Float(binsPerOctave))
+    return vForce.log2(vDSP.divide(frequencies, A440 / 16.0))
+}
