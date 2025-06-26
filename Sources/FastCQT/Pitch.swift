@@ -59,6 +59,22 @@ public func parabolicInterpolation(_ x: Matrix<Float>, axis: Int = 0) -> Matrix<
     return shifts
 }
 
+public func estimateTuning(
+    y: [Float],
+    sr: Float = 22050,
+    nFFT: Int = 2048,
+    resolution: Float = 0.01,
+    binsPerOctave: Int = 12
+) -> Float {
+    let (pitch, mag) = piptrack(y: y, sr: sr, nFFT: nFFT)
+    let threshold: Float = mag.median() ?? 0
+    let filteredPitch = zip(pitch, mag).compactMap { (p, m) in
+        m >= threshold ? p : nil
+    }
+    return pitchTuning(
+        frequencies: filteredPitch, resolution: resolution, binsPerOctave: binsPerOctave)
+}
+
 public func piptrack(
     y: [Float],
     sr: Float = 22050,
@@ -68,12 +84,64 @@ public func piptrack(
     fmax: Float = 4000.0,
     threshold: Float = 0.1,
     window: Windows.WindowType = .hann,
-    center: Bool = true
-) {
-    let S = spectrogram(y: y, nFFT: nFFT, hopLength: hopLength, window: window, center: center)
+    center: Bool = true,
+    ref: Float? = nil
+) -> ([Float], [Float]) {
+    var S = spectrogram(y: y, nFFT: nFFT, hopLength: hopLength, window: window, center: center)
+    let row = S.shape.rows
     let fMin = max(fmin, 0)
     let fMax = min(fmax, sr / 2)
-    let fftFreqs = fftFrequencies(sr: sr, nFFT: nFFT)
+    let fDelta = sr / Float(nFFT)
+    let fMinIndex = Int(fMin / fDelta) + (remainder(fMin, fDelta) == 0 ? 0 : 1)
+    let fMaxIndex = Int(fMax / fDelta) - (remainder(fMax, fDelta) == 0 ? 1 : 0)
+
+    /// These preconditions restrict certain extreme inputs, but still cover the situations used in this project
+    precondition(fMinIndex > 0)
+    precondition(fMaxIndex < nFFT / 2)
+
     let avg = gradient(y: S, axis: 1)
-    let c = 1
+    let shift = parabolicInterpolation(S, axis: 1)
+    let dskew = 0.5 * avg * shift
+
+    if let r = ref {
+        S.thresholdInplace(to: abs(r), with: .zeroFill)
+    } else {
+        let reference = threshold * S.maximum(axis: 1)
+        S.thresholdInplace(to: reference, with: .zeroFill)
+    }
+    var pitches: [Float] = []
+    var mags: [Float] = []
+    let appendElement = { (j: Int, i: Int) in
+        pitches.append((Float(i) + shift[j, i]) * fDelta)
+        mags.append(S[j, i] + dskew[j, i])
+    }
+    for j in 0..<row {
+        for i in fMinIndex...fMaxIndex {
+            if S[j, i] > S[j, i - 1] && S[j, i] >= S[j, i + 1] {
+                appendElement(j, i)
+            }
+        }
+    }
+    return (pitches, mags)
+}
+
+public func pitchTuning(
+    frequencies: [Float],
+    resolution: Float = 0.01,
+    binsPerOctave: Int = 12
+) -> Float {
+    let positiveFreqs = frequencies.filter { $0 > 0 }
+    guard positiveFreqs.count > 0 else { return 0 }
+
+    let octs = vDSP.multiply(Float(binsPerOctave), HzToOcts(frequencies: positiveFreqs))
+    let residual = octs.map {
+        let r = remainder($0, 1)
+        return r >= 0.5 ? r - 1 : r
+    }
+
+    let bins: [Float] = vDSP.ramp(in: -0.5...0.5, count: Int(ceil(1.0 / resolution)) + 1)
+    let counts = residual.histogram(bins: bins)
+    let tuningEst = bins[counts.argmax!]
+
+    return tuningEst
 }
