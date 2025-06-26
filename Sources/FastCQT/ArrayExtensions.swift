@@ -15,7 +15,7 @@ extension Array where Element: BinaryFloatingPoint {
         precondition(bins.isStrictlyAscending)
         var count = [Int](repeating: 0, count: bins.count - 1)
         for x in self {
-            if let index = bins.firstIndex(where: { x <= $0 }), index > 0 {
+            if let index = bins.firstIndex(where: { x < $0 }), index > 0 {
                 count[index - 1] += 1
             }
         }
