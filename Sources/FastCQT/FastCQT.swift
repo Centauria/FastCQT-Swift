@@ -43,7 +43,7 @@ public func vqtFilterFFT(
     var nFFT = basis.shape.columns
 
     if let hop = hopLength,
-        case let l = powf(2.0, 1 + ceilf(log2f(Float(hop)))),
+        case let l = exp2(1 + ceilf(log2f(Float(hop)))),
         Float(nFFT) < l
     {
         nFFT = Int(l)
@@ -111,7 +111,7 @@ public func pseudoCQT(
     scale: Bool = true
 ) -> Matrix<Float> {
     let tune = tuning ?? estimateTuning(y: y, sr: sr, binsPerOctave: binsPerOctave)
-    let fm = fmin * powf(2.0, tune / Float(binsPerOctave))
+    let fm = fmin * exp2(tune / Float(binsPerOctave))
     let freqs = cqtFrequencies(nBins: nBins, fMin: fm, binsPerOctave: binsPerOctave)
 
     let alpha =
