@@ -103,14 +103,15 @@ public func pseudoCQT(
     fmin: Float = 32.70319566257483,
     nBins: Int = 84,
     binsPerOctave: Int = 12,
-    tuning: Float = 0,
+    tuning: Float? = 0,
     filterScale: Float = 1,
     norm: Float = 1,
     sparsity: Float = 0.01,
     window: Windows.WindowType = .hann,
     scale: Bool = true
 ) -> Matrix<Float> {
-    let fm = fmin * powf(2.0, tuning / Float(binsPerOctave))
+    let tune = tuning ?? estimateTuning(y: y, sr: sr, binsPerOctave: binsPerOctave)
+    let fm = fmin * powf(2.0, tune / Float(binsPerOctave))
     let freqs = cqtFrequencies(nBins: nBins, fMin: fm, binsPerOctave: binsPerOctave)
 
     let alpha =
