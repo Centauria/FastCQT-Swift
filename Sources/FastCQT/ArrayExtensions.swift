@@ -1,5 +1,5 @@
-extension Array where Element == Float {
-    func median() -> Float? {
+extension Array where Element: BinaryFloatingPoint {
+    func median() -> Element? {
         guard count > 0 else { return nil }
 
         let sortedArray = self.sorted()
@@ -10,7 +10,7 @@ extension Array where Element == Float {
         }
     }
 
-    func histogram(bins: [Float]) -> [Int] {
+    func histogram(bins: [Element]) -> [Int] {
         precondition(bins.count > 1)
         precondition(bins.isStrictlyAscending)
         var count = [Int](repeating: 0, count: bins.count - 1)
