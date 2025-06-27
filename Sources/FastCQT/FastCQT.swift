@@ -286,3 +286,56 @@ public func CQT(
         filterScale: filterScale, norm: norm,
         sparsity: sparsity, window: window, scale: scale)
 }
+
+public func hybridCQT(
+    y: [Float],
+    sr: Float = 22050,
+    hopLength: Int = 512,
+    fmin: Float = 32.70319566257483,
+    nBins: Int = 84,
+    binsPerOctave: Int = 12,
+    tuning: Float? = 0,
+    filterScale: Float = 1,
+    norm: Float? = 1,
+    sparsity: Float = 0.01,
+    window: Windows.WindowType = .hann,
+    scale: Bool = true
+) -> Matrix<Float> {
+    let tune = tuning ?? estimateTuning(y: y, sr: sr, binsPerOctave: binsPerOctave)
+    let freqs = cqtFrequencies(nBins: nBins, fMin: fmin, binsPerOctave: binsPerOctave, tuning: tune)
+
+    let alpha =
+        nBins == 1
+        ? etRelativeBW(binsPerOctave: binsPerOctave)
+        : relativeBandwidth(freqs: freqs)
+
+    let (lengths, _) = waveletLengths(
+        freqs: freqs, sr: sr, window: window,
+        filterScale: filterScale, alpha: alpha)
+
+    let normLengths = vForce.exp2(vForce.ceil(vForce.log2(lengths)))
+    let indexPseudo = normLengths.firstIndex { $0 < Float(2 * hopLength) } ?? nBins
+    var cqtResponse: [Matrix<Float>] = []
+    if indexPseudo < nBins {
+        cqtResponse.append(
+            pseudoCQT(
+                y: y, sr: sr,
+                hopLength: hopLength, fmin: freqs[indexPseudo],
+                nBins: nBins - indexPseudo,
+                binsPerOctave: binsPerOctave, filterScale: filterScale,
+                norm: norm, sparsity: sparsity,
+                window: window, scale: scale)
+        )
+    }
+    if indexPseudo > 0 {
+        cqtResponse.append(
+            CQT(
+                y: y, sr: sr, hopLength: hopLength, fmin: fmin, nBins: indexPseudo,
+                binsPerOctave: binsPerOctave, filterScale: filterScale, norm: norm,
+                sparsity: sparsity, window: window, scale: scale
+            ).absolute()
+        )
+    }
+
+    return trimStack(cqtResponse: cqtResponse, nBins: nBins)
+}
