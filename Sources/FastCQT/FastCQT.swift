@@ -27,17 +27,17 @@ public func vqtFilterFFT(
     sr: Float,
     freqs: [Float],
     filterScale: Float,
-    norm: Float,
+    norm: Float?,
     sparsity: Float,
     hopLength: Int?,
     window: Windows.WindowType,
-    gamma: Float = 0,
+    gamma: Float? = 0,
     alpha: [Float]?
 ) -> SparseMatrix_ComplexFloat {
     var (basis, lengths) = wavelet(
         freqs: freqs, sr: sr, window: window,
-        filterScale: filterScale, norm: norm, gamma: gamma,
-        alpha: alpha)
+        filterScale: filterScale, norm: norm,
+        gamma: gamma, alpha: alpha)
     let n = basis.shape.rows
     let initFFT = basis.shape.columns
     var nFFT = basis.shape.columns

@@ -91,11 +91,13 @@ public func wavelet(
     window: Windows.WindowType = .hann,
     filterScale: Float = 1,
     padFFT: Bool = true,
-    norm: Float = 1,
-    gamma: Float = 0,
+    norm: Float? = 1,
+    gamma: Float? = 0,
     alpha: [Float]?
 ) -> (ComplexMatrix<Float>, [Float]) {
-    let (lengths, _) = waveletLengths(freqs: freqs, sr: sr, window: window, alpha: alpha)
+    let (lengths, _) = waveletLengths(
+        freqs: freqs, sr: sr, window: window,
+        gamma: gamma, alpha: alpha)
     let n = freqs.count
 
     let maxlenFloat = vDSP.maximum(lengths)
@@ -119,7 +121,9 @@ public func wavelet(
         let siglen = sig.count
         let win: Matrix<Float> = .init(column: Windows.get(type: window, M: siglen))
         sig *= win
-        sig = normalize(S: sig, norm: norm)
+        if let norm = norm {
+            sig = normalize(S: sig, norm: norm)
+        }
         let start = (maxlen - siglen) / 2
         filters[i, start..<start + siglen] = sig
     }
