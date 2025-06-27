@@ -41,10 +41,6 @@ public func resample(
     return output
 }
 
-public func downsample(x: [Float], downsampleFactor: Int, scale: Bool) -> [Float] {
-    resample(x: x, inSampleRate: Double(downsampleFactor), outSampleRate: 1, scale: scale)
-}
-
 public func earlyDownsample(
     y: [Float], sr: Float, hopLength: Int, nOctaves: Int, nyquist: Float, filterCutoff: Float,
     scale: Bool
@@ -58,6 +54,6 @@ public func earlyDownsample(
     let newHopLength = hopLength >> downsampleCount
     assert(y.count >= downsampleFactor)
     let newSr = sr / Float(downsampleFactor)
-    let output = downsample(x: y, downsampleFactor: downsampleFactor, scale: true)
+    let output = resample(x: y, inSampleRate: Double(sr), outSampleRate: Double(newSr), scale: true)
     return (output, newSr, newHopLength)
 }
