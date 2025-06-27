@@ -71,6 +71,25 @@ public func vqtFilterFFT(
     return fftBasisSparse
 }
 
+public func trimStack(cqtResponse: [ComplexMatrix<Float>], nBins: Int) -> ComplexMatrix<Float> {
+    precondition(cqtResponse.count > 0)
+    let maxRow = cqtResponse.map { $0.shape.rows }.min()!
+    var cqtOut: ComplexMatrix<Float> = .zeros(shape: .init(rows: maxRow, columns: nBins))
+
+    var end = nBins
+    let all = 0..<maxRow
+    for ci in cqtResponse {
+        let nOct = ci.shape.columns
+        if end < nOct {
+            cqtOut[all, 0..<end] = ci[all, nOct - end..<nOct]
+        } else {
+            cqtOut[all, end - nOct..<end] = ci[all, 0..<nOct]
+        }
+        end -= nOct
+    }
+    return cqtOut
+}
+
 public func cqtResponse(
     y: [Float],
     nFFT: Int,
