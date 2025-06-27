@@ -124,7 +124,7 @@ public func pseudoCQT(
     binsPerOctave: Int = 12,
     tuning: Float? = 0,
     filterScale: Float = 1,
-    norm: Float = 1,
+    norm: Float? = 1,
     sparsity: Float = 0.01,
     window: Windows.WindowType = .hann,
     scale: Bool = true
