@@ -54,7 +54,7 @@ public func relativeBandwidth(freqs: [Float]) -> [Float] {
             }
         }
     }
-    let u = vForce.exp(vDSP.multiply(log(2.0), vDSP.divide(2.0, bpo)))
+    let u = vForce.exp2(vDSP.divide(2.0, bpo))
     let alpha = vDSP.divide(vDSP.add(-1.0, u), vDSP.add(1.0, u))
     return alpha
 }
