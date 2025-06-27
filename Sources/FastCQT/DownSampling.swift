@@ -2,7 +2,7 @@ import Accelerate
 import Foundation
 import Soxr
 
-public func earlyDownsampleCount(
+func earlyDownsampleCount(
     nyquist: Float, filterCutoff: Float, hopLength: Int, nOctaves: Int
 ) -> Int {
     let downsampleCount1 = max(0, Int(ceilf(log2f(nyquist / filterCutoff)) - 1) - 1)
@@ -41,7 +41,7 @@ public func resample(
     return output
 }
 
-public func earlyDownsample(
+func earlyDownsample(
     y: [Float], sr: Float, hopLength: Int, nOctaves: Int, nyquist: Float, filterCutoff: Float,
     scale: Bool
 ) -> ([Float], Float, Int) {

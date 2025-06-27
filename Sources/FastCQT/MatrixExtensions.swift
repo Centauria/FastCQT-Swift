@@ -2,13 +2,13 @@ import Accelerate
 import Plinth
 
 extension Matrix {
-    @inlinable public mutating func fmapInplace(_ function: (inout [Scalar]) -> Void) {
+    @inlinable mutating func fmapInplace(_ function: (inout [Scalar]) -> Void) {
         function(&elements)
     }
 }
 
 extension Matrix where Scalar == Float {
-    public func maximum(axis: Int) -> Matrix {
+    func maximum(axis: Int) -> Matrix {
         precondition((0...1).contains(axis))
         let m = shape.rows
         let n = shape.columns
@@ -45,7 +45,7 @@ extension Matrix where Scalar == Float {
         }
     }
 
-    public func threshold(to lowerBound: Matrix, with rule: vDSP.ThresholdRule<Float>) -> Matrix {
+    func threshold(to lowerBound: Matrix, with rule: vDSP.ThresholdRule<Float>) -> Matrix {
         let bRow = lowerBound.shape.rows == 1 && lowerBound.shape.columns == shape.columns
         let bCol = lowerBound.shape.rows == shape.rows && lowerBound.shape.columns == 1
         precondition(bRow || bCol)
@@ -98,7 +98,7 @@ extension Matrix where Scalar == Float {
         )
     }
 
-    public mutating func thresholdInplace(
+    mutating func thresholdInplace(
         to lowerBound: Matrix, with rule: vDSP.ThresholdRule<Float>
     ) {
         let bRow = lowerBound.shape.rows == 1 && lowerBound.shape.columns == shape.columns
@@ -145,7 +145,7 @@ extension Matrix where Scalar == Float {
         }
     }
 
-    public mutating func thresholdInplace(
+    mutating func thresholdInplace(
         to lowerBound: Scalar, with rule: vDSP.ThresholdRule<Float>
     ) {
         fmapInplace { vDSP.threshold($0, to: lowerBound, with: rule, result: &$0) }

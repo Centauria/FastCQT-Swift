@@ -3,18 +3,18 @@ import Foundation
 import Numerics
 import Plinth
 
-public func divceil(_ a: Int, _ b: Int) -> Int {
+func divceil(_ a: Int, _ b: Int) -> Int {
     let d = div(Int32(a), Int32(b))
     return Int(d.quot + (d.rem > 0 ? 1 : 0))
 }
 
 @inline(__always)
-public func numTwoFactors(_ x: Int) -> Int {
+func numTwoFactors(_ x: Int) -> Int {
     guard x > 0 else { return 0 }
     return x.trailingZeroBitCount
 }
 
-public func phasor(angles: [Float]) -> ComplexMatrix<Float> {
+func phasor(angles: [Float]) -> ComplexMatrix<Float> {
     let n = angles.count
     var u = [Float](repeating: 0, count: n)
     var v = [Float](repeating: 0, count: n)
@@ -25,13 +25,13 @@ public func phasor(angles: [Float]) -> ComplexMatrix<Float> {
     return z
 }
 
-public func phasor2(angles: [Float32]) -> [Complex<Float32>] {
+func phasor2(angles: [Float32]) -> [Complex<Float32>] {
     return angles.map { a in
         Complex.exp(.init(0, a))
     }
 }
 
-public func normalize(S: ComplexMatrix<Float>, norm: Float = 1) -> ComplexMatrix<Float> {
+func normalize(S: ComplexMatrix<Float>, norm: Float = 1) -> ComplexMatrix<Float> {
     let nrows = S.shape.rows
     let ncols = S.shape.columns
     var Snorm: ComplexMatrix<Float>
@@ -53,7 +53,7 @@ public func normalize(S: ComplexMatrix<Float>, norm: Float = 1) -> ComplexMatrix
     return Snorm
 }
 
-public func sparsify_rows(
+func sparsify_rows(
     x: ComplexMatrix<Float>, quantile: Float = 0.01
 ) -> SparseMatrix_ComplexFloat {
     let nrows = x.shape.rows
@@ -115,7 +115,7 @@ public func sparsify_rows(
     )
 }
 
-public func gradient(y: Matrix<Float>, axis: Int = 0) -> Matrix<Float> {
+func gradient(y: Matrix<Float>, axis: Int = 0) -> Matrix<Float> {
     precondition((0...1).contains(axis), "axis must be 0(row) or 1(column)")
     let row = y.shape.rows
     let col = y.shape.columns
@@ -192,7 +192,7 @@ public func gradient(y: Matrix<Float>, axis: Int = 0) -> Matrix<Float> {
     return g
 }
 
-public func HzToOcts(frequencies: [Float], tuning: Float = 0, binsPerOctave: Int = 12) -> [Float] {
+func HzToOcts(frequencies: [Float], tuning: Float = 0, binsPerOctave: Int = 12) -> [Float] {
     let A440 = 440.0 * exp2(tuning / Float(binsPerOctave))
     return vForce.log2(vDSP.divide(frequencies, A440 / 16.0))
 }

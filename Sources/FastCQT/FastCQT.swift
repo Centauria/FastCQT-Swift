@@ -7,11 +7,11 @@ import Foundation
 import Numerics
 import Plinth
 
-public func fftFrequencies(sr: Float = 22050, nFFT: Int = 2048) -> [Float] {
+func fftFrequencies(sr: Float = 22050, nFFT: Int = 2048) -> [Float] {
     vDSP.ramp(in: 0...sr / 2, count: 1 + nFFT / 2)
 }
 
-public func cqtFrequencies(
+func cqtFrequencies(
     nBins: Int, fMin: Float, binsPerOctave: Int = 12, tuning: Float = 0.0
 )
     -> [Float]
@@ -23,7 +23,7 @@ public func cqtFrequencies(
     return freqs
 }
 
-public func vqtFilterFFT(
+func vqtFilterFFT(
     sr: Float,
     freqs: [Float],
     filterScale: Float,
@@ -71,7 +71,7 @@ public func vqtFilterFFT(
     return fftBasisSparse
 }
 
-public func trimStack(cqtResponse: [Matrix<Float>], nBins: Int) -> Matrix<Float> {
+func trimStack(cqtResponse: [Matrix<Float>], nBins: Int) -> Matrix<Float> {
     precondition(cqtResponse.count > 0)
     let maxRow = cqtResponse.map { $0.shape.rows }.min()!
     var cqtOut: Matrix<Float> = .zeros(shape: .init(rows: maxRow, columns: nBins))
@@ -90,7 +90,7 @@ public func trimStack(cqtResponse: [Matrix<Float>], nBins: Int) -> Matrix<Float>
     return cqtOut
 }
 
-public func trimStack(cqtResponse: [ComplexMatrix<Float>], nBins: Int) -> ComplexMatrix<Float> {
+func trimStack(cqtResponse: [ComplexMatrix<Float>], nBins: Int) -> ComplexMatrix<Float> {
     precondition(cqtResponse.count > 0)
     let maxRow = cqtResponse.map { $0.shape.rows }.min()!
     var cqtOut: ComplexMatrix<Float> = .zeros(shape: .init(rows: maxRow, columns: nBins))
@@ -109,7 +109,7 @@ public func trimStack(cqtResponse: [ComplexMatrix<Float>], nBins: Int) -> Comple
     return cqtOut
 }
 
-public func cqtResponse(
+func cqtResponse(
     y: [Float],
     nFFT: Int,
     hopLength: Int,
@@ -121,7 +121,7 @@ public func cqtResponse(
     return outputFlat
 }
 
-public func cqtResponse(
+func cqtResponse(
     y: [Float],
     nFFT: Int,
     hopLength: Int,

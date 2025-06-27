@@ -7,12 +7,12 @@ public struct Windows {
         case hann
     }
 
-    public static let Bandwidth: [WindowType: Float] = [
+    static let Bandwidth: [WindowType: Float] = [
         .ones: 1.0,
         .hann: 1.50018310546875,
     ]
 
-    public static func get(type: WindowType, M: Int) -> [Float] {
+    static func get(type: WindowType, M: Int) -> [Float] {
         switch type {
         case .ones:
             [Float](repeating: 1.0, count: M)

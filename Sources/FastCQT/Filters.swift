@@ -3,7 +3,7 @@ import Foundation
 import Numerics
 import Plinth
 
-public func windowBandwidth(window: [Float]) -> Float {
+func windowBandwidth(window: [Float]) -> Float {
     let n = window.count
     let sw = vDSP.sum(window)
     let sw2 = vDSP.sumOfSquares(window)
@@ -11,12 +11,12 @@ public func windowBandwidth(window: [Float]) -> Float {
     return y
 }
 
-public func etRelativeBW(binsPerOctave: Int) -> [Float] {
+func etRelativeBW(binsPerOctave: Int) -> [Float] {
     let r = exp2(1.0 / Float(binsPerOctave))
     return [r]
 }
 
-public func relativeBandwidth(freqs: [Float]) -> [Float] {
+func relativeBandwidth(freqs: [Float]) -> [Float] {
     let n = freqs.count
     let logf = vForce.log2(freqs)
     var bpo = [Float](repeating: 0, count: n)
@@ -59,7 +59,7 @@ public func relativeBandwidth(freqs: [Float]) -> [Float] {
     return alpha
 }
 
-public func waveletLengths(
+func waveletLengths(
     freqs: [Float], sr: Float, window: Windows.WindowType,
     filterScale: Float = 1, gamma: Float? = 0, alpha: [Float]?
 ) -> ([Float], Float) {
@@ -85,7 +85,7 @@ public func waveletLengths(
     return (lengths, fCutoff)
 }
 
-public func wavelet(
+func wavelet(
     freqs: [Float],
     sr: Float = 22050,
     window: Windows.WindowType = .hann,

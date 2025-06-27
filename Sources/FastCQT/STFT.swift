@@ -4,7 +4,7 @@ import Numerics
 import PFFFT
 import Plinth
 
-public func stft(
+func stft(
     signal: [Float],
     nFFT: Int,
     hopLength: Int? = nil,
@@ -96,7 +96,7 @@ public func stft(
     return result
 }
 
-public func spectrogram(
+func spectrogram(
     y: [Float],
     nFFT: Int = 2048,
     hopLength: Int? = 512,

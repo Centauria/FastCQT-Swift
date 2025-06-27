@@ -30,7 +30,7 @@ extension SparseMatrix_Float: CustomStringConvertible {
 
 extension SparseMatrix_Float {
     /// 安全地获取元素，返回Optional
-    public func element(at row: Int, column: Int) -> Float? {
+    func element(at row: Int, column: Int) -> Float? {
         guard row >= 0 && row < structure.rowCount,
             column >= 0 && column < structure.columnCount
         else {
@@ -50,7 +50,7 @@ extension SparseMatrix_Float {
     }
 
     /// 获取整个列的非零元素
-    public func column(_ col: Int) -> [(row: Int, value: Float)] {
+    func column(_ col: Int) -> [(row: Int, value: Float)] {
         guard col >= 0 && col < structure.columnCount else {
             return []
         }
@@ -69,7 +69,7 @@ extension SparseMatrix_Float {
     }
 
     /// 获取所有非零元素
-    public func nonZeroElements() -> [(row: Int, column: Int, value: Float)] {
+    func nonZeroElements() -> [(row: Int, column: Int, value: Float)] {
         var result: [(row: Int, column: Int, value: Float)] = []
 
         for col in 0..<Int(structure.columnCount) {
@@ -99,7 +99,7 @@ extension SparseMatrix_ComplexFloat: CustomStringConvertible {
 
 extension SparseMatrix_ComplexFloat {
     /// 安全地获取元素，返回Optional
-    public func element(at row: Int, column: Int) -> Complex<Float>? {
+    func element(at row: Int, column: Int) -> Complex<Float>? {
         let structure = real.structure
         guard row >= 0 && row < structure.rowCount,
             column >= 0 && column < structure.columnCount
@@ -120,7 +120,7 @@ extension SparseMatrix_ComplexFloat {
     }
 
     /// 获取整个列的非零元素
-    public func column(_ col: Int) -> [(row: Int, value: Complex<Float>)] {
+    func column(_ col: Int) -> [(row: Int, value: Complex<Float>)] {
         let structure = real.structure
         guard col >= 0 && col < structure.columnCount else {
             return []
@@ -140,7 +140,7 @@ extension SparseMatrix_ComplexFloat {
     }
 
     /// 获取所有非零元素
-    public func nonZeroElements() -> [(row: Int, column: Int, value: Complex<Float>)] {
+    func nonZeroElements() -> [(row: Int, column: Int, value: Complex<Float>)] {
         let structure = real.structure
         var result: [(row: Int, column: Int, value: Complex<Float>)] = []
 
@@ -160,7 +160,7 @@ extension SparseMatrix_ComplexFloat {
 }
 
 extension SparseMatrix_ComplexFloat {
-    public func absolute() -> SparseMatrix_Float {
+    func absolute() -> SparseMatrix_Float {
         let structure = real.structure
         let r = Array(UnsafeBufferPointer(start: real.data, count: _imag.count))
         let a = vDSP.hypot(r, _imag)
@@ -171,7 +171,7 @@ extension SparseMatrix_ComplexFloat {
 }
 
 extension SparseMatrix_Float {
-    public static func *= (lhs: inout SparseMatrix_Float, rhs: Float) {
+    static func *= (lhs: inout SparseMatrix_Float, rhs: Float) {
         let nnz = lhs.structure.columnStarts[Int(lhs.structure.columnCount)]
         var r = rhs
         vDSP_vsmul(lhs.data, 1, &r, lhs.data, 1, vDSP_Length(nnz))
@@ -179,13 +179,13 @@ extension SparseMatrix_Float {
 }
 
 extension SparseMatrix_ComplexFloat {
-    public static func *= (lhs: inout SparseMatrix_ComplexFloat, rhs: Float) {
+    static func *= (lhs: inout SparseMatrix_ComplexFloat, rhs: Float) {
         lhs._real *= rhs
         vDSP.multiply(rhs, lhs._imag, result: &lhs._imag)
     }
 }
 
-public func SparseMultiply(
+func SparseMultiply(
     _ X: ComplexMatrix<Float>,
     _ A: SparseMatrix_ComplexFloat
 ) -> ComplexMatrix<Float> {
@@ -260,7 +260,7 @@ public func SparseMultiply(
     return .init(real: Yr, imaginary: Yi)
 }
 
-public func SparseMultiply(
+func SparseMultiply(
     _ X: Matrix<Float>,
     _ A: SparseMatrix_Float
 ) -> Matrix<Float> {
@@ -296,7 +296,7 @@ public func SparseMultiply(
     return Y
 }
 
-public func SparseMultiplyNaïve(
+func SparseMultiplyNaïve(
     _ X: Matrix<Float>,
     _ A: SparseMatrix_Float
 ) -> Matrix<Float> {

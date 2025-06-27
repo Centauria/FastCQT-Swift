@@ -2,7 +2,7 @@ import Accelerate
 import Foundation
 import Plinth
 
-public func parabolicInterpolation(_ x: [Float]) -> [Float] {
+func parabolicInterpolation(_ x: [Float]) -> [Float] {
     let n = x.count
     precondition(n >= 3, "Input length must be at least 3")
 
@@ -23,7 +23,7 @@ public func parabolicInterpolation(_ x: [Float]) -> [Float] {
     return shifts
 }
 
-public func parabolicInterpolation(_ x: Matrix<Float>, axis: Int = 0) -> Matrix<Float> {
+func parabolicInterpolation(_ x: Matrix<Float>, axis: Int = 0) -> Matrix<Float> {
     precondition((0...1).contains(axis), "axis must be 0(row) or 1(column)")
     let m = x.shape.columns
     let n = x.shape.rows
@@ -59,7 +59,7 @@ public func parabolicInterpolation(_ x: Matrix<Float>, axis: Int = 0) -> Matrix<
     return shifts
 }
 
-public func estimateTuning(
+func estimateTuning(
     y: [Float],
     sr: Float = 22050,
     nFFT: Int = 2048,
@@ -75,7 +75,7 @@ public func estimateTuning(
         frequencies: filteredPitch, resolution: resolution, binsPerOctave: binsPerOctave)
 }
 
-public func piptrack(
+func piptrack(
     y: [Float],
     sr: Float = 22050,
     nFFT: Int = 2048,
@@ -125,7 +125,7 @@ public func piptrack(
     return (pitches, mags)
 }
 
-public func pitchTuning(
+func pitchTuning(
     frequencies: [Float],
     resolution: Float = 0.01,
     binsPerOctave: Int = 12
