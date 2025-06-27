@@ -111,8 +111,7 @@ public func pseudoCQT(
     scale: Bool = true
 ) -> Matrix<Float> {
     let tune = tuning ?? estimateTuning(y: y, sr: sr, binsPerOctave: binsPerOctave)
-    let fm = fmin * exp2(tune / Float(binsPerOctave))
-    let freqs = cqtFrequencies(nBins: nBins, fMin: fm, binsPerOctave: binsPerOctave)
+    let freqs = cqtFrequencies(nBins: nBins, fMin: fmin, binsPerOctave: binsPerOctave, tuning: tune)
 
     let alpha =
         nBins == 1
