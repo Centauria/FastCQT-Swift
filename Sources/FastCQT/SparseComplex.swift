@@ -170,6 +170,21 @@ extension SparseMatrix_ComplexFloat {
     }
 }
 
+extension SparseMatrix_Float {
+    public static func *= (lhs: inout SparseMatrix_Float, rhs: Float) {
+        let nnz = lhs.structure.columnStarts[Int(lhs.structure.columnCount)]
+        var r = rhs
+        vDSP_vsmul(lhs.data, 1, &r, lhs.data, 1, vDSP_Length(nnz))
+    }
+}
+
+extension SparseMatrix_ComplexFloat {
+    public static func *= (lhs: inout SparseMatrix_ComplexFloat, rhs: Float) {
+        lhs._real *= rhs
+        vDSP.multiply(rhs, lhs._imag, result: &lhs._imag)
+    }
+}
+
 public func SparseMultiply(
     _ X: ComplexMatrix<Float>,
     _ A: SparseMatrix_ComplexFloat
