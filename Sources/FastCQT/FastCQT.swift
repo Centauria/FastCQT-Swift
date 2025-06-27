@@ -165,3 +165,83 @@ public func pseudoCQT(
 
     return output
 }
+
+public func VQT(
+    y: [Float],
+    sr: Float = 22050,
+    hopLength: Int = 512,
+    fmin: Float = 32.70319566257483,
+    nBins: Int = 84,
+    gamma: Float? = nil,
+    binsPerOctave: Int = 12,
+    tuning: Float? = 0,
+    filterScale: Float = 1,
+    norm: Float? = 1,
+    sparsity: Float = 0.01,
+    window: Windows.WindowType = .hann,
+    scale: Bool = true
+) -> ComplexMatrix<Float> {
+    let nOctaves = divceil(nBins, binsPerOctave)
+    let nFilters = min(binsPerOctave, nBins)
+    let tune = tuning ?? estimateTuning(y: y, sr: sr, binsPerOctave: binsPerOctave)
+    let freqs = cqtFrequencies(nBins: nBins, fMin: fmin, binsPerOctave: binsPerOctave, tuning: tune)
+    let alpha =
+        nBins == 1
+        ? etRelativeBW(binsPerOctave: binsPerOctave)
+        : relativeBandwidth(freqs: freqs)
+    let (_, filterCutoff) = waveletLengths(
+        freqs: freqs, sr: sr,
+        window: window, filterScale: filterScale,
+        gamma: gamma, alpha: alpha)
+    let nyquist = sr / 2
+    precondition(filterCutoff <= nyquist)
+
+    var (y2, sr2, hop2) = earlyDownsample(
+        y: y, sr: sr, hopLength: hopLength,
+        nOctaves: nOctaves, nyquist: nyquist,
+        filterCutoff: filterCutoff, scale: scale)
+    let origSr = sr2
+    var factor: Float = 1
+    var vqtResp: [ComplexMatrix<Float>] = []
+    for i in 0..<nOctaves {
+        let s = max(0, nBins - nFilters * (i + 1))
+        let e = nBins - nFilters * i
+        let sl = s..<e
+        let freqsOct = Array(freqs[sl])
+        let alphaOct = Array(alpha[sl])
+
+        var fftBasis = vqtFilterFFT(
+            sr: sr2, freqs: freqsOct,
+            filterScale: filterScale,
+            norm: norm, sparsity: sparsity,
+            hopLength: 0, window: .hann,
+            gamma: gamma, alpha: alphaOct)
+        let nFFT = Int(2 * (fftBasis.real.structure.rowCount - 1))
+        fftBasis *= factor.squareRoot()
+
+        vqtResp.append(cqtResponse(y: y2, nFFT: nFFT, hopLength: hop2, fftBasis: fftBasis))
+
+        if hop2 % 2 == 0 {
+            hop2 /= 2
+            sr2 /= 2
+            y2 = resample(x: y2, inSampleRate: 2, outSampleRate: 1, scale: true)
+        }
+
+        factor *= 2
+    }
+
+    var V = trimStack(cqtResponse: vqtResp, nBins: nBins)
+
+    if scale {
+        let numFrames = V.shape.rows
+        var (lengths, _) = waveletLengths(
+            freqs: freqs, sr: origSr,
+            window: window, filterScale: filterScale,
+            gamma: gamma, alpha: alpha)
+        vForce.sqrt(lengths, result: &lengths)
+        for i in 0..<nBins {
+            V[0..<numFrames, i] /= lengths[i]
+        }
+    }
+    return V
+}
