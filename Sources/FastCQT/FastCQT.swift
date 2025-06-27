@@ -330,7 +330,7 @@ public func hybridCQT(
     if indexPseudo > 0 {
         cqtResponse.append(
             CQT(
-                y: y, sr: sr, hopLength: hopLength, fmin: fmin, nBins: indexPseudo,
+                y: y, sr: sr, hopLength: hopLength, fmin: freqs[0], nBins: indexPseudo,
                 binsPerOctave: binsPerOctave, filterScale: filterScale, norm: norm,
                 sparsity: sparsity, window: window, scale: scale
             ).absolute()
