@@ -27,8 +27,7 @@ func stft(
     }
 
     let numSamples = inputSignal.count
-    let lastFrameComplete = (numSamples - nFFT) % hop == 0
-    let numFrames = (numSamples - nFFT) / hop + 1
+    let numFrames = (numSamples - nFFT - 1) / hop + 1
 
     let w: [Float] = window == .ones ? [] : Windows.get(type: window, M: nFFT)
 
@@ -42,16 +41,14 @@ func stft(
         let inputBuffer = plan.makeSignalBuffer()
         let outputBuffer = plan.makeSpectrumBuffer()
 
-        let length = lastFrameComplete || i == numFrames ? numSamples - i * hop : nFFT
         inputBuffer.withUnsafeMutableBufferPointer { destBuffer in
             inputSignal.withUnsafeBufferPointer { srcBuffer in
                 vDSP_mmov(
                     srcBuffer.baseAddress!.advanced(by: i * hop),
                     destBuffer.baseAddress!,
-                    1, vDSP_Length(length),
+                    1, vDSP_Length(nFFT),
                     1, 1)
             }
-            vDSP_vclr(destBuffer.baseAddress!, 1, vDSP_Length(nFFT - length))
         }
         if window != .ones {
             inputBuffer.withUnsafeMutableBufferPointer { destBuffer in
