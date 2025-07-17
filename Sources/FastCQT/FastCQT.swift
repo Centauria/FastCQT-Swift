@@ -233,7 +233,7 @@ public func VQT(
             sr: sr2, freqs: freqsOct,
             filterScale: filterScale,
             norm: norm, sparsity: sparsity,
-            hopLength: 0, window: .hann,
+            hopLength: 0, window: window,
             gamma: gamma, alpha: alphaOct)
         let nFFT = Int(2 * (fftBasis.real.structure.rowCount - 1))
         fftBasis *= factor.squareRoot()
