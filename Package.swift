@@ -10,7 +10,7 @@ let package = Package(
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "FastCQT",
-            targets: ["FastCQT"])
+            targets: ["FastCQT", "MelSpectrogram"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-numerics.git", .upToNextMajor(from: "1.0.3")),
@@ -48,6 +48,11 @@ let package = Package(
         ),
         .testTarget(
             name: "FastCQTTests",
-            dependencies: ["FastCQT"]),
+            dependencies: ["FastCQT"]
+        ),
+        .target(
+            name: "MelSpectrogram",
+            dependencies: ["STFT"]
+        ),
     ]
 )
