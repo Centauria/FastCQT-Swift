@@ -3,11 +3,6 @@ import Foundation
 import Numerics
 import Plinth
 
-func divceil(_ a: Int, _ b: Int) -> Int {
-    let d = div(Int32(a), Int32(b))
-    return Int(d.quot + (d.rem > 0 ? 1 : 0))
-}
-
 @inline(__always)
 func numTwoFactors(_ x: Int) -> Int {
     guard x > 0 else { return 0 }

@@ -1,6 +1,7 @@
 import Accelerate
 import Foundation
 import Plinth
+import STFT
 
 func parabolicInterpolation(_ x: [Float]) -> [Float] {
     let n = x.count

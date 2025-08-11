@@ -4,7 +4,12 @@ import Numerics
 import PFFFT
 import Plinth
 
-func stft(
+public func divceil(_ a: Int, _ b: Int) -> Int {
+    let d = div(Int32(a), Int32(b))
+    return Int(d.quot + (d.rem > 0 ? 1 : 0))
+}
+
+public func stft(
     signal: [Float],
     nFFT: Int,
     hopLength: Int? = nil,
@@ -93,7 +98,7 @@ func stft(
     return result
 }
 
-func spectrogram(
+public func spectrogram(
     y: [Float],
     nFFT: Int = 2048,
     hopLength: Int? = 512,

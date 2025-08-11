@@ -1,5 +1,4 @@
 import Accelerate
-import Foundation
 
 public struct Windows {
     public enum WindowType {
@@ -9,14 +8,14 @@ public struct Windows {
         case nuttal4c
     }
 
-    static let Bandwidth: [WindowType: Float] = [
+    public static let Bandwidth: [WindowType: Float] = [
         .ones: 1.0,
         .hann: 1.50018310546875,
         .nuttal3: 1.94444,
         .nuttal4c: 1.9761,
     ]
 
-    static func get(type: WindowType, M: Int) -> [Float] {
+    public static func get(type: WindowType, M: Int) -> [Float] {
         switch type {
         case .ones:
             [Float](repeating: 1.0, count: M)

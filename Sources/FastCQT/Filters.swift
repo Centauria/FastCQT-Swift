@@ -2,6 +2,7 @@ import Accelerate
 import Foundation
 import Numerics
 import Plinth
+import STFT
 
 func windowBandwidth(window: [Float]) -> Float {
     let n = window.count

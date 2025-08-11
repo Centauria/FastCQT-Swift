@@ -30,11 +30,19 @@ let package = Package(
             sources: ["dummy.c"]
         ),
         .target(
-            name: "FastCQT",
+            name: "STFT",
             dependencies: [
                 .product(name: "Numerics", package: "swift-numerics"),
                 .product(name: "Plinth", package: "Plinth"),
                 .product(name: "PFFFT", package: "SwiftPFFFT"),
+            ]
+        ),
+        .target(
+            name: "FastCQT",
+            dependencies: [
+                .product(name: "Numerics", package: "swift-numerics"),
+                .product(name: "Plinth", package: "Plinth"),
+                "STFT",
                 "Soxr",
             ]
         ),

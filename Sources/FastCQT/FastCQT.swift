@@ -6,6 +6,7 @@ import CoreML
 import Foundation
 import Numerics
 import Plinth
+import STFT
 
 func fftFrequencies(sr: Float = 22050, nFFT: Int = 2048) -> [Float] {
     vDSP.ramp(in: 0...sr / 2, count: 1 + nFFT / 2)
