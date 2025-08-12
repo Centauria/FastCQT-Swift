@@ -105,9 +105,18 @@ public func spectrogram(
     hopLength: Int? = 512,
     power: Float = 1,
     window: Windows.WindowType = .hann,
-    center: Bool = true
+    center: Bool = true,
+    padMode: PaddingType = .zeros
 ) -> Matrix<Float> {
-    stft(signal: y, nFFT: nFFT, hopLength: hopLength, window: window, center: center)
+    let spec = stft(
+        signal: y, nFFT: nFFT,
+        hopLength: hopLength, window: window,
+        center: center, padMode: padMode
+    )
         .absolute()
-        ** power
+    return if power != 1 {
+        spec ** power
+    } else {
+        spec
+    }
 }
