@@ -1,5 +1,6 @@
 import Accelerate
 import Plinth
+import STFT
 
 func _hzToMel(freq: Float, slaney: Bool) -> Float {
     if slaney {
@@ -92,4 +93,54 @@ public func melscaleFreqBanks(
         }
     }
     return fb
+}
+
+public func melSpect(
+    y: [Float],
+    sampleRate: Float = 16000,
+    nFFT: Int = 400,
+    winLength: Int? = nil,
+    hopLength: Int? = nil,
+    fMin: Float = 0,
+    fMax: Float? = nil,
+    nMels: Int = 128,
+    window: Windows.WindowType = .hann,
+    power: Float = 2,
+    center: Bool = true,
+    norm: Bool = false,
+    slaney: Bool = true
+) -> Matrix<Float> {
+    let spec = spectrogram(
+        y: y, nFFT: nFFT, hopLength: hopLength,
+        power: power, window: window, center: center,
+        padMode: .reflect)
+    let mel = melscaleFreqBanks(
+        nFreqs: nFFT / 2 + 1,
+        fMin: fMin, fMax: fMax ?? floor(sampleRate / 2),
+        nMels: nMels, sampleRate: sampleRate,
+        norm: norm, slaney: slaney)
+    let melSpec = spec <*> mel
+    return melSpec
+}
+
+public func logMelSpect(
+    y: [Float],
+    logMultiplier: Float = 1000,
+    sampleRate: Float = 16000,
+    nFFT: Int = 400,
+    winLength: Int? = nil,
+    hopLength: Int? = nil,
+    fMin: Float = 0,
+    fMax: Float? = nil,
+    nMels: Int = 128,
+    power: Float = 2,
+    norm: Bool = false,
+    slaney: Bool = true
+) -> Matrix<Float> {
+    var melSpec = melSpect(
+        y: y, sampleRate: sampleRate, nFFT: nFFT, winLength: winLength, hopLength: hopLength,
+        fMin: fMin, fMax: fMax, nMels: nMels, window: .hann, power: power,
+        center: true, norm: norm, slaney: slaney)
+    melSpec *= logMultiplier
+    return melSpec.log1p()
 }
