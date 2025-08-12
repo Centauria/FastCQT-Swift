@@ -15,6 +15,7 @@ public func stft(
     hopLength: Int? = nil,
     window: Windows.WindowType = .hann,
     center: Bool = true,
+    padMode: PaddingType = .zeros,
     normalized: Bool = true
 ) -> ComplexMatrix<Float> {
     let hop = hopLength ?? nFFT / 4
@@ -25,7 +26,7 @@ public func stft(
         let tailK = (n + nFFT / 2 - nFFT) / hop + 1
         let padL = nFFT / 2
         let padR = (tailK <= startK || tailK * hop - nFFT / 2 * 2 + nFFT <= n) ? nFFT / 2 : 0
-        let input = [Float](repeating: 0, count: padL) + signal + [Float](repeating: 0, count: padR)
+        let input = pad(x: signal, padSize: (padL, padR), type: padMode)
         inputSignal = .init(shape: .row(length: n + padL + padR), elements: input)
     } else {
         inputSignal = .init(shape: .row(length: signal.count), elements: signal)
