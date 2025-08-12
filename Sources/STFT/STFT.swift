@@ -92,8 +92,8 @@ public func stft(
         }
     }
 
-    if !normalized {
-        result *= sqrtf(Float(nFFT))
+    if normalized {
+        result /= sqrtf(Float(nFFT))
     }
 
     return result
@@ -113,7 +113,7 @@ public func spectrogram(
         hopLength: hopLength, window: window,
         center: center, padMode: padMode
     )
-        .absolute()
+    .absolute()
     return if power != 1 {
         spec ** power
     } else {

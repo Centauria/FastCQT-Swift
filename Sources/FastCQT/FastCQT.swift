@@ -117,7 +117,7 @@ func cqtResponse(
     fftBasis: SparseMatrix_ComplexFloat,
     window: Windows.WindowType = .ones
 ) -> ComplexMatrix<Float> {
-    let D = stft(signal: y, nFFT: nFFT, hopLength: hopLength, window: window)
+    let D = stft(signal: y, nFFT: nFFT, hopLength: hopLength, window: window, normalized: false)
     let outputFlat = SparseMultiply(D, fftBasis)
     return outputFlat
 }
@@ -129,7 +129,7 @@ func cqtResponse(
     fftBasis: SparseMatrix_Float,
     window: Windows.WindowType = .ones
 ) -> Matrix<Float> {
-    let D = stft(signal: y, nFFT: nFFT, hopLength: hopLength, window: window)
+    let D = stft(signal: y, nFFT: nFFT, hopLength: hopLength, window: window, normalized: false)
     let Dmag = D.absolute()
     let outputFlat = SparseMultiply(Dmag, fftBasis)
     return outputFlat
