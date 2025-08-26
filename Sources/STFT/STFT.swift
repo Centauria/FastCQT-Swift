@@ -189,16 +189,16 @@ public func istft(
                     let imagPtr = realPtr.advanced(by: 1)
 
                     // DC and Nyquist
-                    realPtr[0] = reRow[0] * scaleSpec  // Re(0), Im(0)=0 implicitly
-                    imagPtr[0] = reRow[n_FFT / 2] * scaleSpec  // Re(N/2), Im(N/2)=0 implicitly
+                    realPtr[0] = reRow[0]  // Re(0), Im(0)=0 implicitly
+                    imagPtr[0] = reRow[n_FFT / 2]  // Re(N/2), Im(N/2)=0 implicitly
 
                     // Bins 1..N/2-1: interleaved Re, Im at (2k, 2k+1)
                     if n_FFT > 2 {
                         // Copy real parts: k=1..N/2-1 -> f[2k] = reRow[k]*scaleSpec
                         var k = 1
                         while k < (n_FFT / 2) {
-                            f[k].real = reRow[k] * scaleSpec
-                            f[k].imaginary = imRow[k] * scaleSpec
+                            f[k].real = reRow[k]
+                            f[k].imaginary = imRow[k]
                             k += 1
                         }
                     }
@@ -212,10 +212,6 @@ public func istft(
         // 8.3) Normalize IFFT by N and apply synthesis window, then OLA
         timeBuffer.withUnsafeMutableBufferPointer { tb in
             let tptr = tb.baseAddress!
-
-            // Scale by 1/N first
-            var scale = invFFTScale
-            vDSP_vsmul(tptr, 1, &scale, tptr, 1, vDSP_Length(n_FFT))
 
             // Apply window and overlap-add with weight accumulation
             // y[start + j] += t[j] * w[j]
@@ -284,6 +280,8 @@ public func istft(
     if output.count < expectedSignalLength {
         output.append(contentsOf: repeatElement(0, count: expectedSignalLength - output.count))
     }
+
+    vDSP.multiply(scaleSpec * invFFTScale, output, result: &output)
 
     return output
 }
