@@ -152,7 +152,7 @@ public func istft(
 
     // 5) Prepare window, its square, and OLA accumulators
     let w: [Float] = window == .ones ? [] : Windows.get(type: window, M: n_FFT)
-    let winSq = vDSP.square(w)
+    let w2 = vDSP.square(w)
 
     var ola: [Float] = .init(repeating: 0, count: fullOLALength)
     var weight: [Float] = .init(repeating: 0, count: fullOLALength)
@@ -210,67 +210,51 @@ public func istft(
         plan.inverse(spectrum: freqBuffer, signal: timeBuffer)
 
         // 8.3) Normalize IFFT by N and apply synthesis window, then OLA
+        var one: Float = 1.0
         timeBuffer.withUnsafeMutableBufferPointer { tb in
             let tptr = tb.baseAddress!
-
-            // Apply window and overlap-add with weight accumulation
-            // y[start + j] += t[j] * w[j]
-            // weight[start + j] += w[j]^2
-            if window == .ones {
-                // Window == ones: faster path
-                var j = 0
-                while j < n_FFT {
-                    ola[start + j] += tptr[j]
-                    weight[start + j] += 1
-                    j += 1
-                }
-            } else {
-                var j = 0
-                while j < n_FFT {
-                    let v = tptr[j] * w[j]
-                    ola[start + j] += v
-                    weight[start + j] += winSq[j]
-                    j += 1
+            let nFFT = vDSP_Length(n_FFT)
+            ola.withUnsafeMutableBufferPointer { yb in
+                let y = yb.baseAddress!.advanced(by: start)
+                weight.withUnsafeMutableBufferPointer { wb in
+                    let wt = wb.baseAddress!.advanced(by: start)
+                    // Apply window and overlap-add with weight accumulation
+                    // y[start + j] += t[j] * w[j]
+                    // weight[start + j] += w[j]^2
+                    if window == .ones {
+                        vDSP_vadd(tptr, 1, y, 1, y, 1, nFFT)
+                        vDSP_vsadd(wt, 1, &one, wt, 1, nFFT)
+                    } else {
+                        vDSP_vma(tptr, 1, w, 1, y, 1, y, 1, nFFT)
+                        vDSP_vadd(wt, 1, w2, 1, wt, 1, nFFT)
+                    }
                 }
             }
         }
     }
 
     // 9) Divide by window square sum with epsilon guard
-    let eps: Float = 1e-10
-    var outFull = ola  // reuse buffer
-    let count = fullOLALength
-    outFull.withUnsafeMutableBufferPointer { yb in
-        weight.withUnsafeMutableBufferPointer { wb in
-            let y = yb.baseAddress!
-            let w = wb.baseAddress!
-            var i = 0
-            while i < count {
-                let denom = w[i]
-                if denom > eps {
-                    y[i] /= denom
-                } else {
-                    // Where denominator is (near) zero, leave as is (0) per common practice
-                    y[i] = 0
-                }
-                i += 1
-            }
-        }
-    }
+    // epsilon guard removed temporarily
+    vDSP.divide(ola, weight, result: &ola)
+    //    for i in 0..<count {
+    //        if weight[i] <= eps {
+    //            outFull[i] = 0
+    //        }
+    //    }
 
     // 10) Center-cropping and final length adjustment
     var output: [Float]
     if center {
         let cropStart = n_FFT / 2
-        let cropEnd = min(cropStart + expectedSignalLength, outFull.count)
+        let cropEnd = min(cropStart + expectedSignalLength, fullOLALength)
         if cropStart < cropEnd {
-            output = Array(outFull[cropStart..<cropEnd])
+            output = Array(ola[cropStart..<cropEnd])
         } else {
             output = []
         }
     } else {
         // No center: start from the beginning
-        output = outFull
+        output = ola
         if output.count > expectedSignalLength {
             output.removeLast(output.count - expectedSignalLength)
         }
