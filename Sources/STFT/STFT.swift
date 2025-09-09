@@ -168,8 +168,7 @@ public func istft(
     // 7) Scaling to match stft(normalized) semantics and FFT normalization
     // - stft(normalized) divided by sqrt(n_FFT); to invert we multiply by sqrt(n_FFT)
     // - PFFFT inverse is typically unnormalized; we divide by n_FFT after inverse
-    let scaleSpec: Float = normalized ? sqrtf(Float(n_FFT)) : 1.0
-    let invFFTScale: Float = 1.0 / Float(n_FFT)
+    let scaleSpec: Float = normalized ? 1.0 / sqrtf(Float(n_FFT)) : 1.0 / Float(n_FFT)
 
     // 8) Row-wise iFFT + OLA
     let rowStride = spec.shape.columns
@@ -194,7 +193,7 @@ public func istft(
 
                     // Bins 1..N/2-1: interleaved Re, Im at (2k, 2k+1)
                     if n_FFT > 2 {
-                        // Copy real parts: k=1..N/2-1 -> f[2k] = reRow[k]*scaleSpec
+                        // Copy real parts: k=1..N/2-1 -> f[2k] = reRow[k]
                         var k = 1
                         while k < (n_FFT / 2) {
                             f[k].real = reRow[k]
@@ -265,7 +264,7 @@ public func istft(
         output.append(contentsOf: repeatElement(0, count: expectedSignalLength - output.count))
     }
 
-    vDSP.multiply(scaleSpec * invFFTScale, output, result: &output)
+    vDSP.multiply(scaleSpec, output, result: &output)
 
     return output
 }
