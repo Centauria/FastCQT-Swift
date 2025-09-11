@@ -245,9 +245,8 @@ public func VQT(
             hop2 /= 2
             sr2 /= 2
             y2 = resample(x: y2, inSampleRate: 2, outSampleRate: 1, scale: true)
+            factor *= 2
         }
-
-        factor *= 2
     }
 
     var V = trimStack(cqtResponse: vqtResp, nBins: nBins)
