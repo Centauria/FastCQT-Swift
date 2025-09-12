@@ -199,7 +199,8 @@ public func VQT(
     norm: Float? = 1,
     sparsity: Float = 0.01,
     window: Windows.WindowType = .hann,
-    scale: Bool = true
+    scale: Bool = true,
+    parallelize: Bool = true
 ) -> ComplexMatrix<Float> {
     let nOctaves = divceil(nBins, binsPerOctave)
     let nFilters = min(binsPerOctave, nBins)
@@ -221,31 +222,93 @@ public func VQT(
         nOctaves: nOctaves, nyquist: nyquist,
         filterCutoff: filterCutoff, scale: scale)
     let origSr = sr2
-    var factor: Float = 1
     var vqtResp: [ComplexMatrix<Float>] = []
-    for i in 0..<nOctaves {
-        let s = max(0, nBins - nFilters * (i + 1))
-        let e = nBins - nFilters * i
-        let sl = s..<e
-        let freqsOct = Array(freqs[sl])
-        let alphaOct = Array(alpha[sl])
 
-        var fftBasis = vqtFilterFFT(
-            sr: sr2, freqs: freqsOct,
-            filterScale: filterScale,
-            norm: norm, sparsity: sparsity,
-            hopLength: 0, window: window,
-            gamma: gamma, alpha: alphaOct)
-        let nFFT = Int(2 * (fftBasis.real.structure.rowCount - 1))
-        fftBasis *= factor.squareRoot()
+    if parallelize {
+        var hops = [Int](repeating: 0, count: nOctaves)
+        var downIndex = [Int](repeating: 0, count: nOctaves)
+        hops[0] = hop2
+        downIndex[0] = 0
+        var i = 1
+        while i < nOctaves {
+            if hops[i - 1] % 2 == 0 {
+                hops[i] = hops[i - 1] / 2
+                downIndex[i] = downIndex[i - 1] + 1
+            } else {
+                break
+            }
+            i += 1
+        }
+        for j in i..<nOctaves {
+            hops[j] = hops[i - 1]
+            downIndex[j] = downIndex[i - 1]
+        }
+        var ys = [[Float]]()
+        ys.append(y2)
+        for j in 1..<i {
+            ys.append(resample(x: ys[j - 1], inSampleRate: 2, outSampleRate: 1, scale: true))
+        }
+        var nffts = [Int](repeating: 0, count: nOctaves)
+        var fftBasesDict = [Int: SparseMatrix_ComplexFloat]()
+        var vqts: [Int: ComplexMatrix<Float>] = [:]
+        DispatchQueue.concurrentPerform(iterations: nOctaves) { i in
+            let hop = hops[i]
+            let downIndex = downIndex[i]
+            let y = ys[downIndex]
 
-        vqtResp.append(cqtResponse(y: y2, nFFT: nFFT, hopLength: hop2, fftBasis: fftBasis))
+            var factor: Float = 1.0
+            for _ in 0..<downIndex {
+                factor *= 2.0
+            }
 
-        if hop2 % 2 == 0 {
-            hop2 /= 2
-            sr2 /= 2
-            y2 = resample(x: y2, inSampleRate: 2, outSampleRate: 1, scale: true)
-            factor *= 2
+            let s = max(0, nBins - nFilters * (i + 1))
+            let e = nBins - nFilters * i
+            let sl = s..<e
+            let freqsOct = Array(freqs[sl])
+            let alphaOct = Array(alpha[sl])
+
+            var fftBasis = vqtFilterFFT(
+                sr: sr2 / factor, freqs: freqsOct,
+                filterScale: filterScale,
+                norm: norm, sparsity: sparsity,
+                hopLength: 0, window: window,
+                gamma: gamma, alpha: alphaOct)
+            let nFFT = Int(2 * (fftBasis.real.structure.rowCount - 1))
+            fftBasis *= factor.squareRoot()
+
+            nffts[i] = nFFT
+            fftBasesDict[i] = fftBasis
+
+            vqts[i] = cqtResponse(y: y, nFFT: nFFT, hopLength: hop, fftBasis: fftBasis)
+        }
+
+        vqtResp = (0..<nOctaves).map { vqts[$0]! }
+    } else {
+        var factor: Float = 1
+        for i in 0..<nOctaves {
+            let s = max(0, nBins - nFilters * (i + 1))
+            let e = nBins - nFilters * i
+            let sl = s..<e
+            let freqsOct = Array(freqs[sl])
+            let alphaOct = Array(alpha[sl])
+
+            var fftBasis = vqtFilterFFT(
+                sr: sr2, freqs: freqsOct,
+                filterScale: filterScale,
+                norm: norm, sparsity: sparsity,
+                hopLength: 0, window: window,
+                gamma: gamma, alpha: alphaOct)
+            let nFFT = Int(2 * (fftBasis.real.structure.rowCount - 1))
+            fftBasis *= factor.squareRoot()
+
+            vqtResp.append(cqtResponse(y: y2, nFFT: nFFT, hopLength: hop2, fftBasis: fftBasis))
+
+            if hop2 % 2 == 0 {
+                hop2 /= 2
+                sr2 /= 2
+                y2 = resample(x: y2, inSampleRate: 2, outSampleRate: 1, scale: true)
+                factor *= 2
+            }
         }
     }
 
