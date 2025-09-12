@@ -340,14 +340,16 @@ public func CQT(
     norm: Float? = 1,
     sparsity: Float = 0.01,
     window: Windows.WindowType = .hann,
-    scale: Bool = true
+    scale: Bool = true,
+    parallelize: Bool = true
 ) -> ComplexMatrix<Float> {
     VQT(
         y: y, sr: sr, hopLength: hopLength,
         fmin: fmin, nBins: nBins, gamma: 0,
         binsPerOctave: binsPerOctave, tuning: tuning,
         filterScale: filterScale, norm: norm,
-        sparsity: sparsity, window: window, scale: scale)
+        sparsity: sparsity, window: window,
+        scale: scale, parallelize: parallelize)
 }
 
 public func hybridCQT(
@@ -362,7 +364,8 @@ public func hybridCQT(
     norm: Float? = 1,
     sparsity: Float = 0.01,
     window: Windows.WindowType = .hann,
-    scale: Bool = true
+    scale: Bool = true,
+    parallelize: Bool = true
 ) -> Matrix<Float> {
     let tune = tuning ?? estimateTuning(y: y, sr: sr, binsPerOctave: binsPerOctave)
     let freqs = cqtFrequencies(nBins: nBins, fMin: fmin, binsPerOctave: binsPerOctave, tuning: tune)
@@ -395,7 +398,7 @@ public func hybridCQT(
             CQT(
                 y: y, sr: sr, hopLength: hopLength, fmin: freqs[0], nBins: indexPseudo,
                 binsPerOctave: binsPerOctave, filterScale: filterScale, norm: norm,
-                sparsity: sparsity, window: window, scale: scale
+                sparsity: sparsity, window: window, scale: scale, parallelize: parallelize
             ).absolute()
         )
     }
