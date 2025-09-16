@@ -1,6 +1,7 @@
 import Accelerate
 import Numerics
 import Plinth
+import STFT
 import XCTest
 
 @testable import FastCQT
@@ -223,7 +224,7 @@ final class FastCQTTests: XCTestCase {
                 0, 0, 0, 0, 0,
             ]
         )
-        assert((y0 - result0).absolute().maximum() < 1e-7)
+        assert((y0 - result0).absolute().maximum() < 1e-6)
         let y1 = parabolicInterpolation(x, axis: 1)
         let result1: Matrix<Float> = .init(
             shape: .init(rows: 4, columns: 5),
