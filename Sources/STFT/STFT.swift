@@ -37,7 +37,9 @@ public func stft(
 
     let w: [Float] = window == .ones ? [] : Windows.get(type: window, M: nFFT)
 
-    var result: ComplexMatrix<Float> = .zeros(shape: .init(rows: numFrames, columns: nFFT / 2 + 1))
+    let frameSize = nFFT / 2 + 1
+    var realResults = Array(repeating: [Float](repeating: 0, count: frameSize), count: numFrames)
+    var imagResults = Array(repeating: [Float](repeating: 0, count: frameSize), count: numFrames)
 
     DispatchQueue.concurrentPerform(iterations: numFrames) { i in
         guard let plan = try? PFFFT.FFT<Float>(n: nFFT) else {
@@ -74,22 +76,24 @@ public func stft(
             let realPtr = UnsafeMutableRawPointer(mutating: bufferPtr)
                 .assumingMemoryBound(to: Float.self)
             let imagPtr = realPtr.advanced(by: 1)
-            result.real.elements.withUnsafeMutableBufferPointer { destBuffer in
-                let currentRowPtr = destBuffer.baseAddress!.advanced(by: (nFFT / 2 + 1) * i)
-                vDSP_mmov(realPtr, currentRowPtr, 1, vDSP_Length(nFFT / 2), 2, 1)
-                // currentRowPtr.advanced(by: nFFT / 2)
-                //     .update(from: realPtr.advanced(by: 1), count: 1)
-                currentRowPtr[nFFT / 2] = realPtr[1]
-            }
-            result.imaginary.elements.withUnsafeMutableBufferPointer { destBuffer in
-                let currentRowPtr = destBuffer.baseAddress!.advanced(by: (nFFT / 2 + 1) * i)
-                vDSP_mmov(
-                    imagPtr.advanced(by: 2),
-                    currentRowPtr.advanced(by: 1),
-                    1, vDSP_Length(nFFT / 2 - 1),
-                    2, 1)
-            }
+
+            vDSP_mmov(realPtr, &realResults[i], 1, vDSP_Length(nFFT / 2), 2, 1)
+            realResults[i][nFFT / 2] = realPtr[1]
+
+            vDSP_mmov(
+                imagPtr.advanced(by: 2),
+                &imagResults[i][1],
+                1, vDSP_Length(nFFT / 2 - 1),
+                2, 1)
         }
+    }
+
+    var result: ComplexMatrix<Float> = .zeros(shape: .init(rows: numFrames, columns: frameSize))
+    for i in 0..<numFrames {
+        let s = i * frameSize
+        let e = s + frameSize
+        result.real.elements.replaceSubrange(s..<e, with: realResults[i])
+        result.imaginary.elements.replaceSubrange(s..<e, with: imagResults[i])
     }
 
     if normalized {
