@@ -13,7 +13,7 @@ let package = Package(
             targets: ["FastCQT", "MelSpectrogram"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-numerics.git", .upToNextMajor(from: "1.0.3")),
+        .package(url: "https://github.com/apple/swift-numerics.git", .upToNextMajor(from: "1.1.0")),
         .package(url: "https://github.com/dclelland/Plinth.git", from: "2.0.0"),
         .package(url: "https://github.com/jkl1337/SwiftPFFFT.git", .upToNextMajor(from: "0.1.1")),
     ],
